@@ -175,16 +175,35 @@ int display_game() {
     return 0;
 }
 
+int clear_game() {
+    for (int row=0; row < HEIGHT+2; row++) {
+        printf("\033[A\033[K");
+    }
+    return 0;
+}
+
+int loop() {
+    int running = 1;
+    int delay_us = 1000000;
+    Tetromino *s_tetromino = make_tetromino(S_SHAPE, &S_COLOR);
+    Tetromino *t_tetromino = make_tetromino(T_SHAPE, &T_COLOR);
+    int row = -1;
+    while (running) {
+        draw_board();
+        draw_tetromino(row, 5, s_tetromino);
+        draw_tetromino(19, 1, t_tetromino);
+        display_game();
+        usleep(delay_us);
+        clear_game();
+        row++;
+    }
+    free(s_tetromino);
+    free(t_tetromino);
+    return 0;
+}
+
 int main() {
-    draw_game();
+    loop();
 
-    Tetromino *s_tetromino = make_tetromino(S_SHAPE, S_COLOR);
-    draw_tetromino(5, 5, s_tetromino);
-    free(s_tetromino);
-    Tetromino *t_tetromino = make_tetromino(T_SHAPE, T_COLOR);
-    draw_tetromino(10, 5, s_tetromino);
-    free(s_tetromino);
-
-    display_game();
     return 0; 
 }
