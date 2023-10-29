@@ -138,10 +138,28 @@ int draw_tetromino(int row, int col, Tetromino *tetromino) {
     return 0;
 }
 
-int draw_game() {
-    for (int row=0; row< HEIGHT+2; row++) {
+// WARN: If there is ever a case where all squares of the board are tetrominos
+// WARN: Then this code will memory leak the tile
+int draw_board() {
+    char *tile = strdup("[]");
+    if (tile == NULL) {
+        fprintf(stderr, "Memory Allocation Failed.\n");
+        return 1;
+    }
+    for (int row=0; row < HEIGHT+2; row++) {
         for (int col=0; col < WIDTH+2; col++) {
-            game_board[row][col] = "[]";
+            game_board[row][col] = tile;
+        }
+    }
+    return 0;
+}
+
+int clear_board() {
+    for (int row=0; row < HEIGHT+2; row++) {
+        for (int col=0; col < WIDTH+2; col++) {
+            if (game_board[row][col] != NULL) {
+                free(game_board[row][col]);
+            }
         }
     }
     return 0;
