@@ -154,7 +154,10 @@ void handle_sigint(int signum) {
 
 int loop(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
     int running = TRUE;
-    int delay_us = 1000000;
+    int tps = 60;
+    int fall_period = 60;
+    int fall_counter = 0;
+    int delay_us = 1000000/tps;
     Tetromino *active_tetromino = make_tetromino(S_SHAPE, S_COLOR);
     int row = -1;
     while (!quit && running) {
@@ -164,7 +167,11 @@ int loop(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
         refresh();
         usleep(delay_us);
         clear();
-        row++;
+        fall_counter++;
+        if (fall_counter >= 60) {
+            fall_counter = 0;
+            row++;
+        }
         if (row == 20) {
             running = FALSE;
         }
