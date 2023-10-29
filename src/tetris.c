@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <termios.h>
 
 #define WIDTH 10
 #define HEIGHT 20
@@ -202,7 +203,17 @@ int loop() {
     return 0;
 }
 
+int disable_echo() {
+    struct termios term;
+    tcgetattr(fileno(stdin), &term);
+
+    term.c_lflag &= ~ECHO;
+    tcsetattr(fileno(stdin), 0, &term);
+    return 0;
+}
+
 int main() {
+    disable_echo();
     loop();
 
     return 0; 
