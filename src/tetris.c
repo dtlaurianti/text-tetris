@@ -73,8 +73,6 @@ typedef struct {
     int orientation;
 }Tetromino;
 
-char *game_board[HEIGHT+2][WIDTH+2];
-
 Tetromino *make_tetromino(int shape[4][4], int color) {
     Tetromino *tetromino = (Tetromino*)malloc(sizeof(Tetromino));
     if (tetromino == NULL) {
@@ -91,36 +89,12 @@ Tetromino *make_tetromino(int shape[4][4], int color) {
     return tetromino;
 }
 
-int draw_board() {
-    char *tile = strdup("[]");
-    if (tile == NULL) {
-        fprintf(stderr, "Memory Allocation Failed.\n");
-        return 1;
-    }
+int display_game(char *game_board[HEIGHT+2][WIDTH+2], int game_color[HEIGHT+2][WIDTH+2]) {
     for (int row=0; row < HEIGHT+2; row++) {
         for (int col=0; col < WIDTH+2; col++) {
-            game_board[row][col] = tile;
-        }
-    }
-    return 0;
-}
-
-int clear_board() {
-    for (int row=0; row < HEIGHT+2; row++) {
-        for (int col=0; col < WIDTH+2; col++) {
-            if (game_board[row][col] != NULL) {
-                free(game_board[row][col]);
-            }
-        }
-    }
-    return 0;
-}
-
-int display_game() {
-    for (int row=0; row < HEIGHT+2; row++) {
-        attron(COLOR_PAIR((row%8)+1));
-        for (int col=0; col < WIDTH+2; col++) {
+            attron(COLOR_PAIR(game_color[row][col]));
             printw("%s", game_board[row][col]);
+            attroff(COLOR_PAIR(game_color[row][col]));
         }
         printw("\n");
     }
@@ -132,15 +106,14 @@ void handle_sigint(int signum) {
     quit = 1;
 }
 
-int loop() {
+int loop(char *game_board[HEIGHT+2][WIDTH+2], int game_color[HEIGHT+2][WIDTH+2]) {
     int running = TRUE;
     int delay_us = 1000000;
     Tetromino *s_tetromino = make_tetromino(S_SHAPE, S_COLOR);
     Tetromino *t_tetromino = make_tetromino(T_SHAPE, T_COLOR);
     int row = -1;
     while (!quit && running) {
-        draw_board();
-        display_game();
+        display_game(game_board, game_color);
         refresh();
         usleep(delay_us);
         clear();
@@ -167,6 +140,15 @@ int init_color_pairs() {
 }
 
 int main() {
+    char *game_board[HEIGHT+2][WIDTH+2];
+    int game_color[HEIGHT+2][WIDTH+2];
+    for (int row=0; row<HEIGHT+2; row++) {
+        for (int col=0; col<WIDTH+2; col++) {
+            game_board[row][col] = "[]";
+            game_color[row][col] = 8;
+        }
+    }
+
     initscr();
     if (has_colors() == FALSE) {
         endwin();
@@ -181,7 +163,7 @@ int main() {
     noecho();
     keypad(stdscr, TRUE);
     signal(SIGINT, handle_sigint);
-    loop();
+    loop(game_board, game_color);
 
     endwin();
     return 0; 
