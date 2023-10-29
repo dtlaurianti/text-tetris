@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 #include <math.h>
 
 #define WIDTH 10
@@ -71,7 +73,7 @@ int Z_SHAPE[4][4] = {
 
 typedef struct {
     int shape[4][4];
-    RGB color;
+    const RGB *color;
     Orientation orientation;
 }Tetromino;
 
@@ -90,12 +92,11 @@ char *text_color_escape(int r, int g, int b) {
     if (esc == NULL) {
         return NULL;
     }
-    // printf("\x1b[38;2;%d;%d;%dm", r, g, b);
     sprintf(esc, "\x1b[38;2;%d;%d;%dm", r, g, b);
     return esc;
 }
 
-Tetromino *make_tetromino(int shape[4][4], RGB color) {
+Tetromino *make_tetromino(int shape[4][4], const RGB *color) {
     Tetromino *tetromino = (Tetromino*)malloc(sizeof(Tetromino));
     if (tetromino == NULL) {
         fprintf(stderr, "Memory Allocation Failed.\n");
@@ -103,9 +104,7 @@ Tetromino *make_tetromino(int shape[4][4], RGB color) {
     }
     for (int i=0; i<4; i++) {
         for (int j=0; j<4; j++) {
-            printf("shape: %d\n", shape[i][j]);
             tetromino->shape[i][j] = shape[i][j];
-            printf("tetromino->shape: %d\n", tetromino->shape[i][j]);
         }
     }
     tetromino->color = color;
