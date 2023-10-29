@@ -7,8 +7,8 @@
 #include <signal.h>
 #include <ncurses.h>
 
-#define WIDTH 10
-#define HEIGHT 20
+#define WIDTH 12
+#define HEIGHT 22
 
 #define I_COLOR 1
 #define O_COLOR 2
