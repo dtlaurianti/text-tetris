@@ -74,6 +74,7 @@ typedef struct {
     int orientation;
 }Tetromino;
 
+// factory for a dynamically allocated tetromino
 Tetromino *make_tetromino(int shape[4][4], int color) {
     Tetromino *tetromino = (Tetromino*)malloc(sizeof(Tetromino));
     if (tetromino == NULL) {
@@ -90,6 +91,7 @@ Tetromino *make_tetromino(int shape[4][4], int color) {
     return tetromino;
 }
 
+// colors the game_color according to the tetromino color and the squares in occupies
 int paint_tetromino(Tetromino *tetromino, int row, int col, int game_color[HEIGHT][WIDTH]) {
     for (int rr=0; rr < 4; rr++) {
         for (int cc=0; cc < 4; cc++) {
@@ -107,6 +109,7 @@ int paint_tetromino(Tetromino *tetromino, int row, int col, int game_color[HEIGH
     return 0;
 }
 
+// resets all game_color to background
 int clear_paint(int game_color[HEIGHT][WIDTH]) {
     for (int row=0; row<HEIGHT; row++) {
         for (int col=0; col<WIDTH; col++) {
@@ -125,6 +128,7 @@ int clear_paint(int game_color[HEIGHT][WIDTH]) {
     return 0;
 }
 
+// individually write a single square of the game to the window buffer
 int display_square(int row, int col, char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
     attron(COLOR_PAIR(game_color[row][col]));
     printw("%s", game_board[row][col]);
@@ -132,6 +136,7 @@ int display_square(int row, int col, char *game_board[HEIGHT][WIDTH], int game_c
     return 0;
 }
 
+// write the current visual game state to the window buffer
 int display_game(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
     for (int row=0; row < HEIGHT; row++) {
         for (int col=0; col < WIDTH; col++) {
