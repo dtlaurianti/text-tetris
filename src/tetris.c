@@ -75,10 +75,68 @@ typedef struct {
     Orientation orientation;
 }Tetromino;
 
-char *game_board[WIDTH+2][HEIGHT+2];
+char *game_board[HEIGHT+2][WIDTH+2];
+
+char *reset_escape() {
+    return "\x1b[0m";
+}
+
+char *text_color_escape(int r, int g, int b) {
+    int length = snprintf(NULL, 0, "\x1b[38;2;%d;%d;%dm", r, g, b); 
+    if (length <= 0) {
+        return NULL;
+    }
+    char *esc = (char*)malloc(length+1);
+    if (esc == NULL) {
+        return NULL;
+    }
+    // printf("\x1b[38;2;%d;%d;%dm", r, g, b);
+    sprintf(esc, "\x1b[38;2;%d;%d;%dm", r, g, b);
+    return esc;
+}
+
+Tetromino *make_tetromino(int shape[4][4], RGB color) {
+    Tetromino *tetromino = (Tetromino*)malloc(sizeof(Tetromino));
+    if (tetromino == NULL) {
+        fprintf(stderr, "Memory Allocation Failed.\n");
+        return NULL;
+    }
+    for (int i=0; i<4; i++) {
+        for (int j=0; j<4; j++) {
+            printf("shape: %d\n", shape[i][j]);
+            tetromino->shape[i][j] = shape[i][j];
+            printf("tetromino->shape: %d\n", tetromino->shape[i][j]);
+        }
+    }
+    tetromino->color = color;
+    tetromino->orientation = ZERO;
+    return tetromino;
+}
+
+int draw_tetromino(int row, int col, Tetromino *tetromino) {
+    for (int rr = 0; rr < 4; rr++) {
+        for (int cc = 0; cc < 4; cc++) {
+            printf("%d\n", tetromino->shape[rr][cc]);
+            if (tetromino->shape[rr][cc]) {
+                char *tile;
+                sprintf(tile,
+                        "%s[]%s",
+                        text_color_escape(
+                            tetromino->color.r,
+                            tetromino->color.g,
+                            tetromino->color.b
+                            ),
+                        reset_escape()
+                       );
+                game_board[row+rr][col+cc] = tile;
+            }
+        }
+    }
+    return 0;
+}
 
 int draw_game() {
-    for (int row=0; row < HEIGHT+2; row++) {
+    for (int row=0; row< HEIGHT+2; row++) {
         for (int col=0; col < WIDTH+2; col++) {
             game_board[row][col] = "[]";
         }
@@ -98,6 +156,14 @@ int display_game() {
 
 int main() {
     draw_game();
+
+    Tetromino *s_tetromino = make_tetromino(S_SHAPE, S_COLOR);
+    draw_tetromino(5, 5, s_tetromino);
+    free(s_tetromino);
+    Tetromino *t_tetromino = make_tetromino(T_SHAPE, T_COLOR);
+    draw_tetromino(10, 5, s_tetromino);
+    free(s_tetromino);
+
     display_game();
     return 0; 
 }
