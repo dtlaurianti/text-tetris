@@ -115,18 +115,22 @@ Tetromino *make_tetromino(int shape[4][4], const RGB *color) {
 int draw_tetromino(int row, int col, Tetromino *tetromino) {
     for (int rr = 0; rr < 4; rr++) {
         for (int cc = 0; cc < 4; cc++) {
-            printf("%d\n", tetromino->shape[rr][cc]);
-            if (tetromino->shape[rr][cc]) {
-                char *tile;
-                sprintf(tile,
-                        "%s[]%s",
-                        text_color_escape(
-                            tetromino->color.r,
-                            tetromino->color.g,
-                            tetromino->color.b
-                            ),
-                        reset_escape()
-                       );
+            if (
+                    tetromino->shape[rr][cc]
+                    && row+rr > 0
+                    && row+rr < HEIGHT+1
+                    && col+cc > 0
+                    && col+cc < WIDTH+1
+               ) {
+                char *tc_esc = text_color_escape(
+                        tetromino->color->r,
+                        tetromino->color->g,
+                        tetromino->color->b
+                        );
+                char *r_esc = reset_escape();
+                int length = snprintf(NULL, 0, "%s[]%s", tc_esc, r_esc);
+                char *tile = (char*)malloc(length+1);
+                sprintf(tile, "%s[]%s", tc_esc, r_esc);
                 game_board[row+rr][col+cc] = tile;
             }
         }
