@@ -89,9 +89,35 @@ Tetromino *make_tetromino(int shape[4][4], int color) {
     return tetromino;
 }
 
-int display_game(char *game_board[HEIGHT+2][WIDTH+2], int game_color[HEIGHT+2][WIDTH+2]) {
-    for (int row=0; row < HEIGHT+2; row++) {
-        for (int col=0; col < WIDTH+2; col++) {
+int paint_tetromino(Tetromino *tetromino, int row, int col, int game_color[HEIGHT][WIDTH]) {
+    for (int rr=0; rr < 4; rr++) {
+        for (int cc=0; cc < 4; cc++) {
+            if (
+                    tetromino->shape[rr][cc] == 1
+                    && row+rr > 0
+                    && row+rr < HEIGHT
+                    && col+cc > 0
+                    && col+cc < WIDTH
+               ) {
+                game_color[row+rr][col+cc] = tetromino->color;
+            }
+        }
+    }
+    return 0;
+}
+
+int clear_paint(int game_color[HEIGHT][WIDTH]) {
+    for (int row=0; row<HEIGHT; row++) {
+        for (int col=0; col<WIDTH; col++) {
+            game_color[row][col] = 8;
+        }
+    }
+    return 0;
+}
+
+int display_game(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
+    for (int row=0; row < HEIGHT; row++) {
+        for (int col=0; col < WIDTH; col++) {
             attron(COLOR_PAIR(game_color[row][col]));
             printw("%s", game_board[row][col]);
             attroff(COLOR_PAIR(game_color[row][col]));
@@ -106,16 +132,18 @@ void handle_sigint(int signum) {
     quit = 1;
 }
 
-int loop(char *game_board[HEIGHT+2][WIDTH+2], int game_color[HEIGHT+2][WIDTH+2]) {
+int loop(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
     int running = TRUE;
     int delay_us = 1000000;
     Tetromino *s_tetromino = make_tetromino(S_SHAPE, S_COLOR);
     Tetromino *t_tetromino = make_tetromino(T_SHAPE, T_COLOR);
     int row = -1;
     while (!quit && running) {
+        paint_tetromino(s_tetromino, row, 5, game_color);
         display_game(game_board, game_color);
         refresh();
         usleep(delay_us);
+        clear_paint(game_color);
         clear();
         row++;
         if (row == 20) {
@@ -140,10 +168,10 @@ int init_color_pairs() {
 }
 
 int main() {
-    char *game_board[HEIGHT+2][WIDTH+2];
-    int game_color[HEIGHT+2][WIDTH+2];
-    for (int row=0; row<HEIGHT+2; row++) {
-        for (int col=0; col<WIDTH+2; col++) {
+    char *game_board[HEIGHT][WIDTH];
+    int game_color[HEIGHT][WIDTH];
+    for (int row=0; row<HEIGHT; row++) {
+        for (int col=0; col<WIDTH; col++) {
             game_board[row][col] = "[]";
             game_color[row][col] = 8;
         }
