@@ -18,6 +18,7 @@
 #define S_COLOR 6
 #define Z_COLOR 7
 #define B_COLOR 8
+#define W_COLOR 9
 
 #define ZERO 0
 #define NINETY 1
@@ -109,18 +110,32 @@ int paint_tetromino(Tetromino *tetromino, int row, int col, int game_color[HEIGH
 int clear_paint(int game_color[HEIGHT][WIDTH]) {
     for (int row=0; row<HEIGHT; row++) {
         for (int col=0; col<WIDTH; col++) {
-            game_color[row][col] = 8;
+            if (
+                    row == 0
+                    || row == HEIGHT-1
+                    || col == 0
+                    || col == WIDTH-1
+               ) {
+                game_color[row][col] = W_COLOR;
+            } else {
+                game_color[row][col] = B_COLOR;
+            }
         }
     }
+    return 0;
+}
+
+int display_square(int row, int col, char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
+    attron(COLOR_PAIR(game_color[row][col]));
+    printw("%s", game_board[row][col]);
+    attroff(COLOR_PAIR(game_color[row][col]));
     return 0;
 }
 
 int display_game(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
     for (int row=0; row < HEIGHT; row++) {
         for (int col=0; col < WIDTH; col++) {
-            attron(COLOR_PAIR(game_color[row][col]));
-            printw("%s", game_board[row][col]);
-            attroff(COLOR_PAIR(game_color[row][col]));
+            display_square(row, col, game_board, game_color);
         }
         printw("\n");
     }
@@ -135,47 +150,45 @@ void handle_sigint(int signum) {
 int loop(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
     int running = TRUE;
     int delay_us = 1000000;
-    Tetromino *s_tetromino = make_tetromino(S_SHAPE, S_COLOR);
-    Tetromino *t_tetromino = make_tetromino(T_SHAPE, T_COLOR);
+    Tetromino *active_tetromino = make_tetromino(S_SHAPE, S_COLOR);
     int row = -1;
     while (!quit && running) {
-        paint_tetromino(s_tetromino, row, 5, game_color);
+        clear_paint(game_color);
+        paint_tetromino(active_tetromino, row, 5, game_color);
         display_game(game_board, game_color);
         refresh();
         usleep(delay_us);
-        clear_paint(game_color);
         clear();
         row++;
         if (row == 20) {
             running = FALSE;
         }
     }
-    free(s_tetromino);
-    free(t_tetromino);
+    free(active_tetromino);
     return 0;
 }
 
 int init_color_pairs() {
-    init_pair(I_COLOR, 5, -1);
-    init_pair(O_COLOR, 6, -1);
-    init_pair(T_COLOR, 4, -1);
-    init_pair(J_COLOR, 2, -1);
-    init_pair(L_COLOR, 1, -1);
-    init_pair(S_COLOR, 3, -1);
-    init_pair(Z_COLOR, 20, -1);
-    init_pair(B_COLOR, 0, -1);
+    init_pair(I_COLOR, 5, 0);
+    init_pair(O_COLOR, 6, 0);
+    init_pair(T_COLOR, 4, 0);
+    init_pair(J_COLOR, 2, 0);
+    init_pair(L_COLOR, 1, 0);
+    init_pair(S_COLOR, 3, 0);
+    init_pair(Z_COLOR, 20, 0);
+    init_pair(B_COLOR, 8, -1);
+    init_pair(W_COLOR, 7, 0);
     return 0;
 }
 
 int main() {
     char *game_board[HEIGHT][WIDTH];
-    int game_color[HEIGHT][WIDTH];
     for (int row=0; row<HEIGHT; row++) {
         for (int col=0; col<WIDTH; col++) {
             game_board[row][col] = "[]";
-            game_color[row][col] = 8;
         }
     }
+    int game_color[HEIGHT][WIDTH];
 
     initscr();
     if (has_colors() == FALSE) {
