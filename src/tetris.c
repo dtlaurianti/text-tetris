@@ -1,32 +1,28 @@
+#include <curses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <signal.h>
+#include <ncurses.h>
 
 #define WIDTH 10
 #define HEIGHT 20
 
-typedef struct {
-    int r;
-    int g;
-    int b;
-}RGB;
+#define I_COLOR 1
+#define O_COLOR 2
+#define T_COLOR 3
+#define J_COLOR 4
+#define L_COLOR 5
+#define S_COLOR 6
+#define Z_COLOR 7
+#define B_COLOR 8
 
-const RGB I_COLOR = { 0x38, 0x40, 0x9B };
-const RGB O_COLOR = { 0xDB, 0xDB, 0x4C };
-const RGB T_COLOR = { 0xDC, 0x4C, 0x9E };
-const RGB J_COLOR = { 0xDB, 0x8B, 0x45 };
-const RGB L_COLOR = { 0x3E, 0xB5, 0xC9};
-const RGB S_COLOR = { 0x40, 0xAE, 0x7D };
-const RGB Z_COLOR = { 0xDA, 0x3C, 0x40 };
-
-typedef enum {
-    ZERO,
-    NINETY,
-    ONE_EIGHTY,
-    TWO_SEVENTY
-} Orientation;
+#define ZERO 0
+#define NINETY 1
+#define ONE_EIGHTY 2
+#define TWO_SEVENTY 3
 
 int I_SHAPE[4][4] = {
     {0,0,0,0},
@@ -73,30 +69,13 @@ int Z_SHAPE[4][4] = {
 
 typedef struct {
     int shape[4][4];
-    const RGB *color;
-    Orientation orientation;
+    int color;
+    int orientation;
 }Tetromino;
 
 char *game_board[HEIGHT+2][WIDTH+2];
 
-char *reset_escape() {
-    return "\x1b[0m";
-}
-
-char *text_color_escape(int r, int g, int b) {
-    int length = snprintf(NULL, 0, "\x1b[38;2;%d;%d;%dm", r, g, b); 
-    if (length <= 0) {
-        return NULL;
-    }
-    char *esc = (char*)malloc(length+1);
-    if (esc == NULL) {
-        return NULL;
-    }
-    sprintf(esc, "\x1b[38;2;%d;%d;%dm", r, g, b);
-    return esc;
-}
-
-Tetromino *make_tetromino(int shape[4][4], const RGB *color) {
+Tetromino *make_tetromino(int shape[4][4], int color) {
     Tetromino *tetromino = (Tetromino*)malloc(sizeof(Tetromino));
     if (tetromino == NULL) {
         fprintf(stderr, "Memory Allocation Failed.\n");
@@ -112,34 +91,6 @@ Tetromino *make_tetromino(int shape[4][4], const RGB *color) {
     return tetromino;
 }
 
-int draw_tetromino(int row, int col, Tetromino *tetromino) {
-    for (int rr = 0; rr < 4; rr++) {
-        for (int cc = 0; cc < 4; cc++) {
-            if (
-                    tetromino->shape[rr][cc]
-                    && row+rr > 0
-                    && row+rr < HEIGHT+1
-                    && col+cc > 0
-                    && col+cc < WIDTH+1
-               ) {
-                char *tc_esc = text_color_escape(
-                        tetromino->color->r,
-                        tetromino->color->g,
-                        tetromino->color->b
-                        );
-                char *r_esc = reset_escape();
-                int length = snprintf(NULL, 0, "%s[]%s", tc_esc, r_esc);
-                char *tile = (char*)malloc(length+1);
-                sprintf(tile, "%s[]%s", tc_esc, r_esc);
-                game_board[row+rr][col+cc] = tile;
-            }
-        }
-    }
-    return 0;
-}
-
-// WARN: If there is ever a case where all squares of the board are tetrominos
-// WARN: Then this code will memory leak the tile
 int draw_board() {
     char *tile = strdup("[]");
     if (tile == NULL) {
@@ -167,43 +118,71 @@ int clear_board() {
 
 int display_game() {
     for (int row=0; row < HEIGHT+2; row++) {
+        attron(COLOR_PAIR((row%8)+1));
         for (int col=0; col < WIDTH+2; col++) {
-            printf("%s", game_board[row][col]);
+            printw("%s", game_board[row][col]);
         }
-        printf("\n");
+        printw("\n");
     }
     return 0;
 }
 
-int clear_game() {
-    for (int row=0; row < HEIGHT+2; row++) {
-        printf("\033[A\033[K");
-    }
-    return 0;
+volatile sig_atomic_t quit = 0;
+void handle_sigint(int signum) {
+    quit = 1;
 }
 
 int loop() {
-    int running = 1;
+    int running = TRUE;
     int delay_us = 1000000;
-    Tetromino *s_tetromino = make_tetromino(S_SHAPE, &S_COLOR);
-    Tetromino *t_tetromino = make_tetromino(T_SHAPE, &T_COLOR);
+    Tetromino *s_tetromino = make_tetromino(S_SHAPE, S_COLOR);
+    Tetromino *t_tetromino = make_tetromino(T_SHAPE, T_COLOR);
     int row = -1;
-    while (running) {
+    while (!quit && running) {
         draw_board();
-        draw_tetromino(row, 5, s_tetromino);
-        draw_tetromino(19, 1, t_tetromino);
         display_game();
+        refresh();
         usleep(delay_us);
-        clear_game();
+        clear();
         row++;
+        if (row == 20) {
+            running = FALSE;
+        }
     }
     free(s_tetromino);
     free(t_tetromino);
     return 0;
 }
 
+int init_color_pairs() {
+    init_pair(I_COLOR, 5, -1);
+    init_pair(O_COLOR, 6, -1);
+    init_pair(T_COLOR, 4, -1);
+    init_pair(J_COLOR, 2, -1);
+    init_pair(L_COLOR, 1, -1);
+    init_pair(S_COLOR, 3, -1);
+    init_pair(Z_COLOR, 20, -1);
+    init_pair(B_COLOR, 0, -1);
+    return 0;
+}
+
 int main() {
+    initscr();
+    if (has_colors() == FALSE) {
+        endwin();
+        printf("Your terminal does not support colors.\n");
+        exit(1);
+    }
+    start_color();
+    use_default_colors();
+    assume_default_colors(-1, -1);
+    init_color_pairs();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    signal(SIGINT, handle_sigint);
     loop();
 
+    endwin();
     return 0; 
 }
