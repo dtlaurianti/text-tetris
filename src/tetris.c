@@ -10,6 +10,11 @@
 #define WIDTH 12
 #define HEIGHT 22
 
+#define ZERO 0
+#define NINETY 1
+#define ONE_EIGHTY 2
+#define TWO_SEVENTY 3
+
 #define I_COLOR 1
 #define O_COLOR 2
 #define T_COLOR 3
@@ -20,10 +25,18 @@
 #define B_COLOR 8
 #define W_COLOR 9
 
-#define ZERO 0
-#define NINETY 1
-#define ONE_EIGHTY 2
-#define TWO_SEVENTY 3
+int init_color_pairs() {
+    init_pair(I_COLOR, 5, 0);
+    init_pair(O_COLOR, 6, 0);
+    init_pair(T_COLOR, 4, 0);
+    init_pair(J_COLOR, 2, 0);
+    init_pair(L_COLOR, 1, 0);
+    init_pair(S_COLOR, 3, 0);
+    init_pair(Z_COLOR, 20, 0);
+    init_pair(B_COLOR, 8, -1);
+    init_pair(W_COLOR, 7, 0);
+    return 0;
+}
 
 int I_SHAPE[4][4] = {
     {0,0,0,0},
@@ -177,19 +190,6 @@ int loop(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
         }
     }
     free(active_tetromino);
-    return 0;
-}
-
-int init_color_pairs() {
-    init_pair(I_COLOR, 5, 0);
-    init_pair(O_COLOR, 6, 0);
-    init_pair(T_COLOR, 4, 0);
-    init_pair(J_COLOR, 2, 0);
-    init_pair(L_COLOR, 1, 0);
-    init_pair(S_COLOR, 3, 0);
-    init_pair(Z_COLOR, 20, 0);
-    init_pair(B_COLOR, 8, -1);
-    init_pair(W_COLOR, 7, 0);
     return 0;
 }
 
