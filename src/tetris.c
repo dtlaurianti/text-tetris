@@ -269,13 +269,13 @@ int loop(int game_board[HEIGHT][WIDTH]) {
         if (fall_counter >= fall_period) {
             fall_counter = 0;
             active_tetromino->row++;
-        }
-        // TODO: change to check if the tetromino has landed
-        if (active_tetromino->row == 19) {
-            place_tetromino(active_tetromino, game_board);
-            free(active_tetromino);
-            next_tetromino_id = (rand()%7)+1;
-            active_tetromino = make_tetromino(next_tetromino_id);
+            if (!can_place_tetromino(active_tetromino, game_board)) {
+                active_tetromino->row--;
+                place_tetromino(active_tetromino, game_board);
+                free(active_tetromino);
+                next_tetromino_id = (rand()%7)+1;
+                active_tetromino = make_tetromino(next_tetromino_id);
+            }
         }
     }
     free(active_tetromino);
