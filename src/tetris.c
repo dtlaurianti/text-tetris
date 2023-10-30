@@ -80,13 +80,15 @@ int Z_SHAPE[4][4] = {
 };
 
 typedef struct {
+    int id;
+    int row;
+    int col;
     int shape[4][4];
-    int color;
     int orientation;
 }Tetromino;
 
 // factory for a dynamically allocated tetromino
-Tetromino *make_tetromino(int shape[4][4], int color) {
+Tetromino *make_tetromino(int shape[4][4], int id) {
     Tetromino *tetromino = (Tetromino*)malloc(sizeof(Tetromino));
     if (tetromino == NULL) {
         fprintf(stderr, "Memory Allocation Failed.\n");
@@ -97,31 +99,52 @@ Tetromino *make_tetromino(int shape[4][4], int color) {
             tetromino->shape[i][j] = shape[i][j];
         }
     }
-    tetromino->color = color;
+    tetromino->id = id;
     tetromino->orientation = ZERO;
+    tetromino->row = 0;
+    if (id == 1 || id == 2) {
+        tetromino->col = 4;
+    } else {
+        tetromino->col = 5;
+    }
     return tetromino;
 }
 
-// colors the game_color according to the tetromino color and the squares in occupies
-int paint_tetromino(Tetromino *tetromino, int row, int col, int game_color[HEIGHT][WIDTH]) {
+int can_place_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
     for (int rr=0; rr < 4; rr++) {
         for (int cc=0; cc < 4; cc++) {
-            if (
-                    tetromino->shape[rr][cc] == 1
-                    && row+rr > 0
-                    && row+rr < HEIGHT
-                    && col+cc > 0
-                    && col+cc < WIDTH
-               ) {
-                game_color[row+rr][col+cc] = tetromino->color;
+            if (tetromino->shape[rr][cc] == 1) {
+                if (
+                        !(tetromino->row+rr > 0)
+                        || !(tetromino->row+rr < HEIGHT-1)
+                        || !(tetromino->col+cc > 0)
+                        || !(tetromino->col+cc < WIDTH-1)
+                        || !(game_board[tetromino->row+rr][tetromino->col+cc] == B_SQUARE)
+                    ) {
+                        return FALSE;
+                    }
+            }
+        }
+    }
+    return TRUE;
+}
+
+int place_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
+    if (!can_place_tetromino(tetromino, game_board)) {
+        return 1;
+    }
+    for (int rr=0; rr < 4; rr++) {
+        for (int cc=0; cc < 4; cc++) {
+            if (tetromino->shape[rr][cc] == 1) {
+                game_board[tetromino->row+rr][tetromino->col+cc] = tetromino->id;
             }
         }
     }
     return 0;
 }
 
-// resets all game_color to background
-int clear_paint(int game_color[HEIGHT][WIDTH]) {
+// resets the game board to empty
+int clear_board(int game_board[HEIGHT][WIDTH]) {
     for (int row=0; row<HEIGHT; row++) {
         for (int col=0; col<WIDTH; col++) {
             if (
@@ -130,9 +153,9 @@ int clear_paint(int game_color[HEIGHT][WIDTH]) {
                     || col == 0
                     || col == WIDTH-1
                ) {
-                game_color[row][col] = W_SQUARE;
+                game_board[row][col] = W_SQUARE;
             } else {
-                game_color[row][col] = B_SQUARE;
+                game_board[row][col] = B_SQUARE;
             }
         }
     }
@@ -140,19 +163,19 @@ int clear_paint(int game_color[HEIGHT][WIDTH]) {
 }
 
 // write the current visual game state to the window buffer
-int display_game(int game_color[HEIGHT][WIDTH]) {
+int display_game(int game_board[HEIGHT][WIDTH]) {
     for (int row=0; row < HEIGHT; row++) {
         for (int col=0; col < WIDTH; col++) {
-            attron(COLOR_PAIR(game_color[row][col]));
+            attron(COLOR_PAIR(game_board[row][col]));
             printw("[]");
-            attroff(COLOR_PAIR(game_color[row][col]));
+            attroff(COLOR_PAIR(game_board[row][col]));
         }
         printw("\n");
     }
     return 0;
 }
 
-int loop(int game_color[HEIGHT][WIDTH]) {
+int loop(int game_board[HEIGHT][WIDTH]) {
     int running = TRUE;
     struct timespec tick_time;
     struct timespec curr_time;
@@ -161,25 +184,30 @@ int loop(int game_color[HEIGHT][WIDTH]) {
     int fall_counter = 0;
     float delay_s = 1.0/tps;
     Tetromino *active_tetromino = make_tetromino(S_SHAPE, S_SQUARE);
-    int row = -1;
-    int col = 6;
     int ch;
 
     while (running) {
-        clear_paint(game_color);
-        paint_tetromino(active_tetromino, row, col, game_color);
-        display_game(game_color);
+        place_tetromino(active_tetromino, game_board);
 
+        // paint_tetromino(active_tetromino, game_board);
+        display_game(game_board);
         refresh();
+        clear_board(game_board);
 
         clock_gettime(CLOCK_MONOTONIC, &tick_time);
         clock_gettime(CLOCK_MONOTONIC, &curr_time);
         while ((curr_time.tv_sec - tick_time.tv_sec) + (curr_time.tv_nsec - tick_time.tv_nsec)/1e9 < delay_s) {
             ch = getch();
-            if (ch == KEY_LEFT && col>1) {
-                col--;
-            } else if (ch == KEY_RIGHT && col<WIDTH-2) {
-                col++;
+            if (ch == KEY_LEFT) {
+                active_tetromino->col--;
+                if (!can_place_tetromino(active_tetromino, game_board)) {
+                    active_tetromino->col++;
+                }
+            } else if (ch == KEY_RIGHT) {
+                active_tetromino->col++;
+                if (!can_place_tetromino(active_tetromino, game_board)) {
+                    active_tetromino->col--;
+                }
             }
             clock_gettime(CLOCK_MONOTONIC, &curr_time);
         }
@@ -189,9 +217,9 @@ int loop(int game_color[HEIGHT][WIDTH]) {
         fall_counter++;
         if (fall_counter >= fall_period) {
             fall_counter = 0;
-            row++;
+            active_tetromino->row++;
         }
-        if (row == 20) {
+        if (active_tetromino->row == 20) {
             running = FALSE;
         }
     }
@@ -200,8 +228,8 @@ int loop(int game_color[HEIGHT][WIDTH]) {
 }
 
 int main() {
-    int game_color[HEIGHT][WIDTH];
-    clear_paint(game_color);
+    int game_board[HEIGHT][WIDTH];
+    clear_board(game_board);
 
     initscr();
     if (has_colors() == FALSE) {
@@ -219,7 +247,7 @@ int main() {
     keypad(stdscr, TRUE);
     curs_set(0);
 
-    loop(game_color);
+    loop(game_board);
 
     endwin();
     return 0; 
