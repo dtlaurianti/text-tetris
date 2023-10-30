@@ -1,10 +1,8 @@
-#include <curses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <string.h>
 #include <math.h>
-#include <signal.h>
+#include <time.h>
 #include <ncurses.h>
 
 #define WIDTH 12
@@ -141,47 +139,55 @@ int clear_paint(int game_color[HEIGHT][WIDTH]) {
     return 0;
 }
 
-// individually write a single square of the game to the window buffer
-int display_square(int row, int col, char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
-    attron(COLOR_PAIR(game_color[row][col]));
-    printw("%s", game_board[row][col]);
-    attroff(COLOR_PAIR(game_color[row][col]));
-    return 0;
-}
-
 // write the current visual game state to the window buffer
-int display_game(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
+int display_game(int game_color[HEIGHT][WIDTH]) {
     for (int row=0; row < HEIGHT; row++) {
         for (int col=0; col < WIDTH; col++) {
-            display_square(row, col, game_board, game_color);
+            attron(COLOR_PAIR(game_color[row][col]));
+            printw("[]");
+            attroff(COLOR_PAIR(game_color[row][col]));
         }
         printw("\n");
     }
     return 0;
 }
 
-volatile sig_atomic_t quit = 0;
-void handle_sigint(int signum) {
-    quit = 1;
-}
-
-int loop(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
+int loop(int game_color[HEIGHT][WIDTH]) {
     int running = TRUE;
+    struct timespec tick_time;
+    struct timespec curr_time;
     int tps = 60;
-    int fall_period = 60;
+    int fall_period = 1*tps;
     int fall_counter = 0;
-    int delay_us = 1000000/tps;
+    float delay_s = 1.0/tps;
     Tetromino *active_tetromino = make_tetromino(S_SHAPE, S_COLOR);
     int row = -1;
-    while (!quit && running) {
+    int col = 6;
+    int ch;
+
+    while (running) {
         clear_paint(game_color);
-        paint_tetromino(active_tetromino, row, 5, game_color);
-        display_game(game_board, game_color);
+        paint_tetromino(active_tetromino, row, col, game_color);
+        display_game(game_color);
+
         refresh();
-        usleep(delay_us);
+
+        clock_gettime(CLOCK_MONOTONIC, &tick_time);
+        clock_gettime(CLOCK_MONOTONIC, &curr_time);
+        while ((curr_time.tv_sec - tick_time.tv_sec) + (curr_time.tv_nsec - tick_time.tv_nsec)/1e9 < delay_s) {
+            ch = getch();
+            if (ch == KEY_LEFT && col>1) {
+                col--;
+            } else if (ch == KEY_RIGHT && col<WIDTH-2) {
+                col++;
+            }
+            clock_gettime(CLOCK_MONOTONIC, &curr_time);
+        }
+
         clear();
+
         fall_counter++;
-        if (fall_counter >= 60) {
+        if (fall_counter >= fall_period) {
             fall_counter = 0;
             row++;
         }
@@ -194,13 +200,8 @@ int loop(char *game_board[HEIGHT][WIDTH], int game_color[HEIGHT][WIDTH]) {
 }
 
 int main() {
-    char *game_board[HEIGHT][WIDTH];
-    for (int row=0; row<HEIGHT; row++) {
-        for (int col=0; col<WIDTH; col++) {
-            game_board[row][col] = "[]";
-        }
-    }
     int game_color[HEIGHT][WIDTH];
+    clear_paint(game_color);
 
     initscr();
     if (has_colors() == FALSE) {
@@ -214,9 +215,10 @@ int main() {
     init_color_pairs();
     cbreak();
     noecho();
+    timeout(10);
     keypad(stdscr, TRUE);
-    signal(SIGINT, handle_sigint);
-    loop(game_board, game_color);
+
+    loop(game_color);
 
     endwin();
     return 0; 
