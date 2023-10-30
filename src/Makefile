@@ -3,7 +3,7 @@ CC = gcc
 # set compile flags for gcc
 CFLAGS = -g -I$(IDIR) -I/usr/include/ncursesw
 # set linker flags
-LDFLAGS = -lm -lncurses -lpthread
+LDFLAGS = -lm -lncurses
 # define the organization of the project
 IDIR = ../include
 ODIR = obj
