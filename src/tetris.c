@@ -13,26 +13,26 @@
 #define ONE_EIGHTY 2
 #define TWO_SEVENTY 3
 
-#define I_COLOR 1
-#define O_COLOR 2
-#define T_COLOR 3
-#define J_COLOR 4
-#define L_COLOR 5
-#define S_COLOR 6
-#define Z_COLOR 7
-#define B_COLOR 8
-#define W_COLOR 9
+#define I_SQUARE 1
+#define O_SQUARE 2
+#define T_SQUARE 3
+#define J_SQUARE 4
+#define L_SQUARE 5
+#define S_SQUARE 6
+#define Z_SQUARE 7
+#define B_SQUARE 8
+#define W_SQUARE 9
 
 int init_color_pairs() {
-    init_pair(I_COLOR, 5, 0);
-    init_pair(O_COLOR, 6, 0);
-    init_pair(T_COLOR, 4, 0);
-    init_pair(J_COLOR, 2, 0);
-    init_pair(L_COLOR, 1, 0);
-    init_pair(S_COLOR, 3, 0);
-    init_pair(Z_COLOR, 20, 0);
-    init_pair(B_COLOR, 8, -1);
-    init_pair(W_COLOR, 7, 0);
+    init_pair(I_SQUARE, 5, 0);
+    init_pair(O_SQUARE, 6, 0);
+    init_pair(T_SQUARE, 4, 0);
+    init_pair(J_SQUARE, 2, 0);
+    init_pair(L_SQUARE, 1, 0);
+    init_pair(S_SQUARE, 3, 0);
+    init_pair(Z_SQUARE, 20, 0);
+    init_pair(B_SQUARE, 8, -1);
+    init_pair(W_SQUARE, 7, 0);
     return 0;
 }
 
@@ -130,9 +130,9 @@ int clear_paint(int game_color[HEIGHT][WIDTH]) {
                     || col == 0
                     || col == WIDTH-1
                ) {
-                game_color[row][col] = W_COLOR;
+                game_color[row][col] = W_SQUARE;
             } else {
-                game_color[row][col] = B_COLOR;
+                game_color[row][col] = B_SQUARE;
             }
         }
     }
@@ -160,7 +160,7 @@ int loop(int game_color[HEIGHT][WIDTH]) {
     int fall_period = 1*tps;
     int fall_counter = 0;
     float delay_s = 1.0/tps;
-    Tetromino *active_tetromino = make_tetromino(S_SHAPE, S_COLOR);
+    Tetromino *active_tetromino = make_tetromino(S_SHAPE, S_SQUARE);
     int row = -1;
     int col = 6;
     int ch;
