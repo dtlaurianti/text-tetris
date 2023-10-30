@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include <math.h>
 #include <time.h>
 #include <ncurses.h>
@@ -88,16 +89,34 @@ typedef struct {
 }Tetromino;
 
 // factory for a dynamically allocated tetromino
-Tetromino *make_tetromino(int shape[4][4], int id) {
+Tetromino *make_tetromino(int id) {
     Tetromino *tetromino = (Tetromino*)malloc(sizeof(Tetromino));
     if (tetromino == NULL) {
         fprintf(stderr, "Memory Allocation Failed.\n");
         return NULL;
     }
-    for (int i=0; i<4; i++) {
-        for (int j=0; j<4; j++) {
-            tetromino->shape[i][j] = shape[i][j];
-        }
+    switch (id) {
+        case 1:
+            memcpy(tetromino->shape, I_SHAPE, sizeof(tetromino->shape));
+            break;
+        case 2:
+            memcpy(tetromino->shape, O_SHAPE, sizeof(tetromino->shape));
+            break;
+        case 3:
+            memcpy(tetromino->shape, T_SHAPE, sizeof(tetromino->shape));
+            break;
+        case 4:
+            memcpy(tetromino->shape, J_SHAPE, sizeof(tetromino->shape));
+            break;
+        case 5:
+            memcpy(tetromino->shape, L_SHAPE, sizeof(tetromino->shape));
+            break;
+        case 6:
+            memcpy(tetromino->shape, S_SHAPE, sizeof(tetromino->shape));
+            break;
+        case 7:
+            memcpy(tetromino->shape, Z_SHAPE, sizeof(tetromino->shape));
+            break;
     }
     tetromino->id = id;
     tetromino->orientation = ZERO;
@@ -215,14 +234,13 @@ int loop(int game_board[HEIGHT][WIDTH]) {
     int tps = 60;
     int fall_period = 1*tps;
     int fall_counter = 0;
-    float delay_s = 1.0/tps;
-    Tetromino *active_tetromino = make_tetromino(S_SHAPE, S_SQUARE);
+    float delay_s = 0.1/tps;
+    int next_tetromino_id = (rand()%7)+1;
+    Tetromino *active_tetromino = make_tetromino(next_tetromino_id);
     int ch;
 
     while (running) {
         place_tetromino(active_tetromino, game_board);
-
-        // paint_tetromino(active_tetromino, game_board);
         display_game(game_board);
         refresh();
         unplace_tetromino(active_tetromino, game_board);
@@ -252,8 +270,12 @@ int loop(int game_board[HEIGHT][WIDTH]) {
             fall_counter = 0;
             active_tetromino->row++;
         }
-        if (active_tetromino->row == 20) {
-            running = FALSE;
+        // TODO: change to check if the tetromino has landed
+        if (active_tetromino->row == 19) {
+            place_tetromino(active_tetromino, game_board);
+            free(active_tetromino);
+            next_tetromino_id = (rand()%7)+1;
+            active_tetromino = make_tetromino(next_tetromino_id);
         }
     }
     free(active_tetromino);
