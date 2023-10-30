@@ -143,6 +143,39 @@ int place_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
     return 0;
 }
 
+int can_unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
+    for (int rr=0; rr < 4; rr++) {
+        for (int cc=0; cc < 4; cc++) {
+            if (tetromino->shape[rr][cc] == 1) {
+                if (
+                        !(tetromino->row+rr > 0)
+                        || !(tetromino->row+rr < HEIGHT-1)
+                        || !(tetromino->col+cc > 0)
+                        || !(tetromino->col+cc < WIDTH-1)
+                        || !(game_board[tetromino->row+rr][tetromino->col+cc] == tetromino->id)
+                    ) {
+                        return FALSE;
+                    }
+            }
+        }
+    }
+    return TRUE;
+}
+
+int unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
+    if (!can_unplace_tetromino(tetromino, game_board)) {
+        return 1;
+    }
+    for (int rr=0; rr < 4; rr++) {
+        for (int cc=0; cc < 4; cc++) {
+            if (tetromino->shape[rr][cc] == 1) {
+                game_board[tetromino->row+rr][tetromino->col+cc] = B_SQUARE;
+            }
+        }
+    }
+    return 0;
+}
+
 // resets the game board to empty
 int clear_board(int game_board[HEIGHT][WIDTH]) {
     for (int row=0; row<HEIGHT; row++) {
@@ -192,7 +225,7 @@ int loop(int game_board[HEIGHT][WIDTH]) {
         // paint_tetromino(active_tetromino, game_board);
         display_game(game_board);
         refresh();
-        clear_board(game_board);
+        unplace_tetromino(active_tetromino, game_board);
 
         clock_gettime(CLOCK_MONOTONIC, &tick_time);
         clock_gettime(CLOCK_MONOTONIC, &curr_time);
