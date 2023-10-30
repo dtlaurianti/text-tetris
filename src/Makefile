@@ -1,9 +1,9 @@
 # set gcc as c compiler
 CC = gcc
 # set compile flags for gcc
-CFLAGS = -I$(IDIR) -I/usr/include/ncursesw
+CFLAGS = -g -I$(IDIR) -I/usr/include/ncursesw
 # set linker flags
-LDFLAGS = -lm -lncurses
+LDFLAGS = -lm -lncurses -lpthread
 # define the organization of the project
 IDIR = ../include
 ODIR = obj
