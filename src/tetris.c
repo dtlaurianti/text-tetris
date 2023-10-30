@@ -217,6 +217,7 @@ int main() {
     noecho();
     timeout(10);
     keypad(stdscr, TRUE);
+    curs_set(0);
 
     loop(game_color);
 
