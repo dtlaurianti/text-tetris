@@ -442,6 +442,10 @@ int loop(int game_board[HEIGHT][WIDTH]) {
                 if (!can_place_tetromino(active_tetromino, game_board)) {
                     active_tetromino->col--;
                 }
+            } else if (ch == 'z' || ch == 'Z') {
+                active_tetromino->orientation = (active_tetromino->orientation+3)%4;
+            } else if (ch == 'x' || ch == 'X') {
+                active_tetromino->orientation = (active_tetromino->orientation+5)%4;
             }
             clock_gettime(CLOCK_MONOTONIC, &curr_time);
         }
