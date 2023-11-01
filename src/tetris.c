@@ -320,6 +320,7 @@ int loop(int game_board[HEIGHT][WIDTH]) {
 }
 
 int main() {
+    srand(time(NULL));
     int game_board[HEIGHT][WIDTH];
     clear_board(game_board);
 
