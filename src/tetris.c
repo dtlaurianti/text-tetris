@@ -13,6 +13,8 @@
 #define NINETY 1
 #define ONE_EIGHTY 2
 #define TWO_SEVENTY 3
+#define CW 1
+#define CCW -1
 
 #define I_SQUARE 1
 #define O_SQUARE 2
@@ -341,6 +343,24 @@ int unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
     return 0;
 }
 
+// attempts to rotate and wall kick the tetromino
+int rotate_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH], int direction) {
+    if (direction != CW || direction != CCW) {
+        return 1;
+    }
+    int prevOrientation = tetromino->orientation;
+    tetromino->orientation = (tetromino->orientation+4+direction)%4;
+
+    for (int attempt=0; attempt<5; attempt++) {
+        if (can_place_tetromino(tetromino, game_board)) {
+            return 0;
+        } else {
+            wall_kick(tetromino, game_board, prevOrientation);
+        }
+    }
+    tetromino->orientation = prevOrientation;
+}
+
 // deletes a given row from the game board, dropping down the above squares
 int clear_line(int row, int game_board[HEIGHT][WIDTH]) {
     if (row < 1 || row >= HEIGHT-1) {
@@ -443,10 +463,9 @@ int loop(int game_board[HEIGHT][WIDTH]) {
                     active_tetromino->col--;
                 }
             } else if (ch == 'z' || ch == 'Z') {
-                // TODO: wall kicks so that rotation doesn't make tetrominos overlap walls
-                active_tetromino->orientation = (active_tetromino->orientation+3)%4;
+                rotate_tetromino(active_tetromino, game_board, CCW);
             } else if (ch == 'x' || ch == 'X') {
-                active_tetromino->orientation = (active_tetromino->orientation+5)%4;
+                rotate_tetromino(active_tetromino, game_board, CW);
             }
             clock_gettime(CLOCK_MONOTONIC, &curr_time);
         }
