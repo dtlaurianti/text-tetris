@@ -443,6 +443,7 @@ int loop(int game_board[HEIGHT][WIDTH]) {
                     active_tetromino->col--;
                 }
             } else if (ch == 'z' || ch == 'Z') {
+                // TODO: wall kicks so that rotation doesn't make tetrominos overlap walls
                 active_tetromino->orientation = (active_tetromino->orientation+3)%4;
             } else if (ch == 'x' || ch == 'X') {
                 active_tetromino->orientation = (active_tetromino->orientation+5)%4;
