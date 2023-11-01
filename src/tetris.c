@@ -195,6 +195,42 @@ int unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
     return 0;
 }
 
+// deletes a given row from the game board, dropping down the above squares
+int clear_line(int row, int game_board[HEIGHT][WIDTH]) {
+    if (row < 1 || row >= HEIGHT-1) {
+        return 1;
+    }
+    for (int i=row; i>1; i--) {
+        memcpy(game_board[i], game_board[i-1], WIDTH*sizeof(int));
+    }
+
+    for (int col=0; col<WIDTH; col++) {
+        if (col == 0 || col == WIDTH-1) {
+            game_board[1][col] = W_SQUARE;
+        } else {
+            game_board[1][col] = B_SQUARE;
+        }
+    }
+    return 0;
+}
+
+// checks for rows filled completely by tetromino squares and deletes them,
+// dropping down the tetromino squares above
+int clear_filled_lines(int game_board[HEIGHT][WIDTH]) {
+    for (int row=1; row<HEIGHT-1; row++) {
+        int full = TRUE;
+        for (int col=0; col<WIDTH; col++) {
+            if (game_board[row][col] == B_SQUARE) {
+                full = FALSE;
+            }
+        }
+        if (full) {
+            clear_line(row, game_board);
+        }
+    }
+    return 0;
+}
+
 // resets the game board to empty
 int clear_board(int game_board[HEIGHT][WIDTH]) {
     for (int row=0; row<HEIGHT; row++) {
@@ -240,6 +276,7 @@ int loop(int game_board[HEIGHT][WIDTH]) {
     int ch;
 
     while (running) {
+        clear_filled_lines(game_board);
         place_tetromino(active_tetromino, game_board);
         display_game(game_board);
         refresh();
