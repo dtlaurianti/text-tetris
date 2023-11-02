@@ -309,9 +309,9 @@ int can_place_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
                         || !(tetromino->col+cc > 0)
                         || !(tetromino->col+cc < WIDTH-1)
                         || !(game_board[tetromino->row+rr][tetromino->col+cc] == B_SQUARE)
-                    ) {
-                        return FALSE;
-                    }
+                   ) {
+                    return FALSE;
+                }
             }
         }
     }
@@ -342,9 +342,9 @@ int can_unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
                         || !(tetromino->col+cc > 0)
                         || !(tetromino->col+cc < WIDTH-1)
                         || !(game_board[tetromino->row+rr][tetromino->col+cc] == tetromino->id)
-                    ) {
-                        return FALSE;
-                    }
+                   ) {
+                    return FALSE;
+                }
             }
         }
     }
