@@ -365,35 +365,83 @@ int unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
     return 0;
 }
 
+int compute_kick_index(int orientation, int prevOrientation) {
+    if (prevOrientation == ZERO && orientation == RIGHT) {
+        return 0;
+    } if (prevOrientation == RIGHT && orientation == ZERO) {
+        return 1;
+    } if (prevOrientation == RIGHT && orientation == TWO) {
+        return 2;
+    } if (prevOrientation == TWO && orientation == RIGHT) {
+        return 3;
+    } if (prevOrientation == TWO && orientation == LEFT) {
+        return 4;
+    } if (prevOrientation == LEFT && orientation == TWO) {
+        return 5;
+    } if (prevOrientation == LEFT && orientation == ZERO) {
+        return 6;
+    } if (prevOrientation == ZERO && orientation == LEFT) {
+        return 7;
+    } else {
+        return 8;
+    }
+}
+
+// moves the tetromino according to the wall kick rules of the current attemp
+int wall_kick(Tetromino *tetromino, int game_board[HEIGHT][WIDTH],
+        int prevOrientation, int attempt) {
+    if (tetromino->id == O_SQUARE) {
+        return 0;
+    } else if (tetromino->id == I_SQUARE) {
+        int kick_index =
+            compute_kick_index(tetromino->orientation, prevOrientation);
+        int dx = I_KICK[kick_index][attempt][0];
+        int dy = I_KICK[kick_index][attempt][1];
+        tetromino->col = tetromino->col + dx;
+        tetromino->row = tetromino->row - dy;
+        return 0;
+    } else {
+        int kick_index =
+            compute_kick_index(tetromino->orientation, prevOrientation);
+        int dx = X_KICK[kick_index][attempt][0];
+        int dy = X_KICK[kick_index][attempt][1];
+        tetromino->col = tetromino->col + dx;
+        tetromino->row = tetromino->row - dy;
+        return 0;
+    }
+}
+
 // attempts to rotate and wall kick the tetromino
-int rotate_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH], int direction) {
-    if (direction != CW || direction != CCW) {
+int rotate_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH],
+        int direction) {
+    if (direction != CW && direction != CCW) {
         return 1;
     }
     int prevOrientation = tetromino->orientation;
-    tetromino->orientation = (tetromino->orientation+4+direction)%4;
+    tetromino->orientation = (tetromino->orientation + 4 + direction) % 4;
 
-    for (int attempt=0; attempt<5; attempt++) {
+    for (int attempt = 0; attempt < 4; attempt++) {
         if (can_place_tetromino(tetromino, game_board)) {
             return 0;
         } else {
-            wall_kick(tetromino, game_board, prevOrientation);
+            wall_kick(tetromino, game_board, prevOrientation, attempt);
         }
     }
     tetromino->orientation = prevOrientation;
+    return 0;
 }
 
 // deletes a given row from the game board, dropping down the above squares
 int clear_line(int row, int game_board[HEIGHT][WIDTH]) {
-    if (row < 1 || row >= HEIGHT-1) {
+    if (row < 1 || row >= HEIGHT - 1) {
         return 1;
     }
-    for (int i=row; i>1; i--) {
-        memcpy(game_board[i], game_board[i-1], WIDTH*sizeof(int));
+    for (int i = row; i > 1; i--) {
+        memcpy(game_board[i], game_board[i - 1], WIDTH * sizeof(int));
     }
 
-    for (int col=0; col<WIDTH; col++) {
-        if (col == 0 || col == WIDTH-1) {
+    for (int col = 0; col < WIDTH; col++) {
+        if (col == 0 || col == WIDTH - 1) {
             game_board[1][col] = W_SQUARE;
         } else {
             game_board[1][col] = B_SQUARE;
@@ -405,9 +453,9 @@ int clear_line(int row, int game_board[HEIGHT][WIDTH]) {
 // checks for rows filled completely by tetromino squares and deletes them,
 // dropping down the tetromino squares above
 int clear_filled_lines(int game_board[HEIGHT][WIDTH]) {
-    for (int row=1; row<HEIGHT-1; row++) {
+    for (int row = 1; row < HEIGHT - 1; row++) {
         int full = TRUE;
-        for (int col=0; col<WIDTH; col++) {
+        for (int col = 0; col < WIDTH; col++) {
             if (game_board[row][col] == B_SQUARE) {
                 full = FALSE;
             }
@@ -421,14 +469,10 @@ int clear_filled_lines(int game_board[HEIGHT][WIDTH]) {
 
 // resets the game board to empty
 int clear_board(int game_board[HEIGHT][WIDTH]) {
-    for (int row=0; row<HEIGHT; row++) {
-        for (int col=0; col<WIDTH; col++) {
-            if (
-                    row == 0
-                    || row == HEIGHT-1
-                    || col == 0
-                    || col == WIDTH-1
-               ) {
+    for (int row = 0; row < HEIGHT; row++) {
+        for (int col = 0; col < WIDTH; col++) {
+            if (row == 0 || row == HEIGHT - 1 || col == 0 ||
+                    col == WIDTH - 1) {
                 game_board[row][col] = W_SQUARE;
             } else {
                 game_board[row][col] = B_SQUARE;
@@ -440,8 +484,8 @@ int clear_board(int game_board[HEIGHT][WIDTH]) {
 
 // write the current visual game state to the window buffer
 int display_game(int game_board[HEIGHT][WIDTH]) {
-    for (int row=0; row < HEIGHT; row++) {
-        for (int col=0; col < WIDTH; col++) {
+    for (int row = 0; row < HEIGHT; row++) {
+        for (int col = 0; col < WIDTH; col++) {
             attron(COLOR_PAIR(game_board[row][col]));
             printw("[]");
             attroff(COLOR_PAIR(game_board[row][col]));
@@ -456,10 +500,10 @@ int loop(int game_board[HEIGHT][WIDTH]) {
     struct timespec tick_time;
     struct timespec curr_time;
     int tps = 60;
-    int fall_period = 1*tps;
+    int fall_period = 1 * tps;
     int fall_counter = 0;
-    float delay_s = 0.1/tps;
-    int next_tetromino_id = (rand()%7)+1;
+    float delay_s = 1.0 / tps;
+    int next_tetromino_id = (rand() % 7) + 1;
     Tetromino *active_tetromino = make_tetromino(next_tetromino_id);
     int ch;
 
@@ -472,16 +516,20 @@ int loop(int game_board[HEIGHT][WIDTH]) {
 
         clock_gettime(CLOCK_MONOTONIC, &tick_time);
         clock_gettime(CLOCK_MONOTONIC, &curr_time);
-        while ((curr_time.tv_sec - tick_time.tv_sec) + (curr_time.tv_nsec - tick_time.tv_nsec)/1e9 < delay_s) {
+        while ((curr_time.tv_sec - tick_time.tv_sec) +
+                (curr_time.tv_nsec - tick_time.tv_nsec) / 1e9 <
+                delay_s) {
             ch = getch();
             if (ch == KEY_LEFT) {
                 active_tetromino->col--;
-                if (!can_place_tetromino(active_tetromino, game_board)) {
+                if (!can_place_tetromino(active_tetromino,
+                            game_board)) {
                     active_tetromino->col++;
                 }
             } else if (ch == KEY_RIGHT) {
                 active_tetromino->col++;
-                if (!can_place_tetromino(active_tetromino, game_board)) {
+                if (!can_place_tetromino(active_tetromino,
+                            game_board)) {
                     active_tetromino->col--;
                 }
             } else if (ch == 'z' || ch == 'Z') {
@@ -502,7 +550,7 @@ int loop(int game_board[HEIGHT][WIDTH]) {
                 active_tetromino->row--;
                 place_tetromino(active_tetromino, game_board);
                 free(active_tetromino);
-                next_tetromino_id = (rand()%7)+1;
+                next_tetromino_id = (rand() % 7) + 1;
                 active_tetromino = make_tetromino(next_tetromino_id);
             }
         }
@@ -535,5 +583,5 @@ int main() {
     loop(game_board);
 
     endwin();
-    return 0; 
+    return 0;
 }
