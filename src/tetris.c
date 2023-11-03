@@ -532,6 +532,12 @@ int loop(int game_board[HEIGHT][WIDTH]) {
                             game_board)) {
                     active_tetromino->col--;
                 }
+            } else if (ch == KEY_DOWN) {
+                active_tetromino->row++;
+                if (!can_place_tetromino(active_tetromino,
+                            game_board)) {
+                    active_tetromino->row--;
+                }
             } else if (ch == 'z' || ch == 'Z') {
                 rotate_tetromino(active_tetromino, game_board, CCW);
             } else if (ch == 'x' || ch == 'X') {
