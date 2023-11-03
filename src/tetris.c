@@ -508,6 +508,7 @@ int loop(int game_board[HEIGHT][WIDTH]) {
     int ch;
 
     while (running) {
+        clear();
         clear_filled_lines(game_board);
         place_tetromino(active_tetromino, game_board);
         display_game(game_board);
@@ -538,6 +539,12 @@ int loop(int game_board[HEIGHT][WIDTH]) {
                             game_board)) {
                     active_tetromino->row--;
                 }
+            } else if (ch == ' ') {
+                while (can_place_tetromino(active_tetromino,
+                            game_board)) {
+                    active_tetromino->row++;
+                }
+                active_tetromino->row--;
             } else if (ch == 'z' || ch == 'Z') {
                 rotate_tetromino(active_tetromino, game_board, CCW);
             } else if (ch == 'x' || ch == 'X') {
@@ -545,9 +552,6 @@ int loop(int game_board[HEIGHT][WIDTH]) {
             }
             clock_gettime(CLOCK_MONOTONIC, &curr_time);
         }
-
-        clear();
-
         fall_counter++;
         if (fall_counter >= fall_period) {
             fall_counter = 0;
