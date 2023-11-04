@@ -1,3 +1,4 @@
+#include <curses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -532,6 +533,10 @@ int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_wind
         place_tetromino(active_tetromino, game_board);
         display_game(game_board, board_window);
         wrefresh(board_window);
+
+        wclear(score_window);
+        wprintw(score_window, "%d", score);
+        wrefresh(score_window);
         unplace_tetromino(active_tetromino, game_board);
 
         clock_gettime(CLOCK_MONOTONIC, &tick_time);
