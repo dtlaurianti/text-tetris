@@ -501,20 +501,21 @@ int clear_board(int game_board[HEIGHT][WIDTH]) {
 }
 
 // write the current visual game state to the window buffer
-int display_game(int game_board[HEIGHT][WIDTH]) {
+int display_game(int game_board[HEIGHT][WIDTH], WINDOW *board_window) {
     for (int row = 0; row < HEIGHT; row++) {
         for (int col = 0; col < WIDTH; col++) {
-            attron(COLOR_PAIR(game_board[row][col]));
-            printw("[]");
-            attroff(COLOR_PAIR(game_board[row][col]));
+            wattron(board_window, COLOR_PAIR(game_board[row][col]));
+            wprintw(board_window, "[]");
+            wattroff(board_window, COLOR_PAIR(game_board[row][col]));
         }
-        printw("\n");
+        wprintw(board_window, "\n");
     }
     return 0;
 }
 
-int loop(int game_board[HEIGHT][WIDTH]) {
+int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_window) {
     int running = TRUE;
+    int score = 0;
     struct timespec tick_time;
     struct timespec curr_time;
     int tps = 60;
@@ -526,11 +527,11 @@ int loop(int game_board[HEIGHT][WIDTH]) {
     int ch;
 
     while (running) {
-        clear();
+        wclear(board_window);
         clear_filled_lines(game_board);
         place_tetromino(active_tetromino, game_board);
-        display_game(game_board);
-        refresh();
+        display_game(game_board, board_window);
+        wrefresh(board_window);
         unplace_tetromino(active_tetromino, game_board);
 
         clock_gettime(CLOCK_MONOTONIC, &tick_time);
@@ -608,8 +609,14 @@ int main() {
     keypad(stdscr, TRUE);
     curs_set(0);
 
-    loop(game_board);
+    WINDOW *board_window = newwin(HEIGHT, 2*WIDTH+1, 0, 0);
 
+    WINDOW *score_window = newwin(1, 6, 22,0);
+
+    loop(game_board, board_window, score_window);
+
+    delwin(board_window);
+    delwin(score_window);
     endwin();
     return 0;
 }
