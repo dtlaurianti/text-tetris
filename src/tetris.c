@@ -377,22 +377,22 @@ int unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
     return 0;
 }
 
-int compute_kick_index(int orientation, int prevOrientation) {
-    if (prevOrientation == ZERO && orientation == RIGHT) {
+int compute_kick_index(int orientation, int prev_orientation) {
+    if (prev_orientation == ZERO && orientation == RIGHT) {
         return 0;
-    } if (prevOrientation == RIGHT && orientation == ZERO) {
+    } if (prev_orientation == RIGHT && orientation == ZERO) {
         return 1;
-    } if (prevOrientation == RIGHT && orientation == TWO) {
+    } if (prev_orientation == RIGHT && orientation == TWO) {
         return 2;
-    } if (prevOrientation == TWO && orientation == RIGHT) {
+    } if (prev_orientation == TWO && orientation == RIGHT) {
         return 3;
-    } if (prevOrientation == TWO && orientation == LEFT) {
+    } if (prev_orientation == TWO && orientation == LEFT) {
         return 4;
-    } if (prevOrientation == LEFT && orientation == TWO) {
+    } if (prev_orientation == LEFT && orientation == TWO) {
         return 5;
-    } if (prevOrientation == LEFT && orientation == ZERO) {
+    } if (prev_orientation == LEFT && orientation == ZERO) {
         return 6;
-    } if (prevOrientation == ZERO && orientation == LEFT) {
+    } if (prev_orientation == ZERO && orientation == LEFT) {
         return 7;
     } else {
         return 8;
@@ -401,12 +401,12 @@ int compute_kick_index(int orientation, int prevOrientation) {
 
 // moves the tetromino according to the wall kick rules of the current attemp
 int wall_kick(Tetromino *tetromino, int game_board[HEIGHT][WIDTH],
-        int prevOrientation, int attempt) {
+        int prev_orientation, int attempt) {
     if (tetromino->id == O_SQUARE) {
         return 0;
     } else if (tetromino->id == I_SQUARE) {
         int kick_index =
-            compute_kick_index(tetromino->orientation, prevOrientation);
+            compute_kick_index(tetromino->orientation, prev_orientation);
         int dx = I_KICK[kick_index][attempt][0];
         int dy = I_KICK[kick_index][attempt][1];
         tetromino->col = tetromino->col + dx;
@@ -414,7 +414,7 @@ int wall_kick(Tetromino *tetromino, int game_board[HEIGHT][WIDTH],
         return 0;
     } else {
         int kick_index =
-            compute_kick_index(tetromino->orientation, prevOrientation);
+            compute_kick_index(tetromino->orientation, prev_orientation);
         int dx = X_KICK[kick_index][attempt][0];
         int dy = X_KICK[kick_index][attempt][1];
         tetromino->col = tetromino->col + dx;
@@ -429,17 +429,23 @@ int rotate_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH],
     if (direction != CW && direction != CCW) {
         return 1;
     }
-    int prevOrientation = tetromino->orientation;
+    int prev_row = tetromino->row;
+    int prev_col = tetromino->col;
+    int prev_orientation = tetromino->orientation;
     tetromino->orientation = (tetromino->orientation + 4 + direction) % 4;
 
     for (int attempt = 0; attempt < 4; attempt++) {
         if (can_place_tetromino(tetromino, game_board)) {
             return 0;
         } else {
-            wall_kick(tetromino, game_board, prevOrientation, attempt);
+            tetromino->row = prev_row;
+            tetromino->col = prev_col;
+            wall_kick(tetromino, game_board, prev_orientation, attempt);
         }
     }
-    tetromino->orientation = prevOrientation;
+    tetromino->row = prev_row;
+    tetromino->col = prev_col;
+    tetromino->orientation = prev_orientation;
     return 0;
 }
 
