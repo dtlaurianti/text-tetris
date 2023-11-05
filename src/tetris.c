@@ -488,7 +488,11 @@ int clear_filled_lines(int game_board[HEIGHT][WIDTH]) {
             clear_line(row, game_board);
         }
     }
-    switch (count) {
+    return count;
+}
+
+int compute_score(int lines_cleared) {
+    switch (lines_cleared) {
         case 4: return 800;
         case 3: return 500;
         case 2: return 300;
@@ -537,9 +541,12 @@ int count_digits(int num) {
     return count;
 }
 
-int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_window) {
+int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_window, WINDOW *level_window) {
     int running = TRUE;
     int score = 0;
+    int lines_cleared;
+    int total_lines_cleared = 0;
+    int level = 0;
 
     struct timespec start_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
@@ -557,16 +564,27 @@ int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_wind
 
     while (running) {
         wclear(board_window);
-        score += clear_filled_lines(game_board);
+        lines_cleared = clear_filled_lines(game_board);
+        total_lines_cleared += lines_cleared;
+        score += compute_score(lines_cleared);
+        level = total_lines_cleared/10;
         place_tetromino(active_tetromino, game_board);
         display_game(game_board, board_window);
         wrefresh(board_window);
 
+        wclear(level_window);
+        wprintw(level_window, "Level:");
+        for (int i=0; i<2*WIDTH-6-count_digits(level); i++) {
+            wprintw(level_window, " ");
+        }
+        wprintw(level_window, "%d", level);
+        wrefresh(level_window);
+
         wclear(score_window);
         clock_gettime(CLOCK_MONOTONIC, &curr_time);
-        wprintw(score_window, "%d:%02d", (curr_time.tv_sec-start_time.tv_sec)/60,
+        wprintw(score_window, "%02d:%02d", (curr_time.tv_sec-start_time.tv_sec)/60,
                 (curr_time.tv_sec-start_time.tv_sec)%60);
-        for (int i=0; i<2*WIDTH+1-5-count_digits(score); i++) {
+        for (int i=0; i<2*WIDTH-5-count_digits(score); i++) {
             wprintw(score_window, " ");
         }
         wprintw(score_window, "%d", score);
@@ -653,10 +671,11 @@ int main() {
     int window_origin_y = (term_height - (2*WIDTH+1))/2;
     int window_origin_x = (term_width - HEIGHT)/2;
 
+    WINDOW *level_window = newwin(1, 2*WIDTH+1, window_origin_y-1, window_origin_x);
     WINDOW *board_window = newwin(HEIGHT, 2*WIDTH+1, window_origin_y, window_origin_x);
     WINDOW *score_window = newwin(1, 2*WIDTH+1, window_origin_y+22, window_origin_x);
 
-    loop(game_board, board_window, score_window);
+    loop(game_board, board_window, score_window, level_window);
 
     delwin(board_window);
     delwin(score_window);
