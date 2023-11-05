@@ -540,14 +540,17 @@ int count_digits(int num) {
 int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_window) {
     int running = TRUE;
     int score = 0;
+
     struct timespec start_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
     struct timespec tick_time;
     struct timespec curr_time;
+
     int tps = 60;
     int fall_period = 1 * tps;
     int fall_counter = 0;
     float delay_s = 1.0 / tps;
+
     int next_tetromino_id = (rand() % 7) + 1;
     Tetromino *active_tetromino = make_tetromino(next_tetromino_id);
     int ch;
@@ -645,8 +648,13 @@ int main() {
     keypad(stdscr, TRUE);
     curs_set(0);
 
-    WINDOW *board_window = newwin(HEIGHT, 2*WIDTH+1, 0, 0);
-    WINDOW *score_window = newwin(1, 2*WIDTH+1, 22,0);
+    int term_height, term_width;
+    getmaxyx(stdscr, term_height, term_width);
+    int window_origin_y = (term_height - (2*WIDTH+1))/2;
+    int window_origin_x = (term_width - HEIGHT)/2;
+
+    WINDOW *board_window = newwin(HEIGHT, 2*WIDTH+1, window_origin_y, window_origin_x);
+    WINDOW *score_window = newwin(1, 2*WIDTH+1, window_origin_y+22, window_origin_x);
 
     loop(game_board, board_window, score_window);
 
