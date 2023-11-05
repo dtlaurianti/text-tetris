@@ -1,4 +1,3 @@
-#include <curses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -522,9 +521,23 @@ int display_game(int game_board[HEIGHT][WIDTH], WINDOW *board_window) {
     return 0;
 }
 
+int count_digits(int num) {
+    if (num == 0) {
+        return 1;
+    }
+    int count = 0;
+    while (num > 0) {
+        num /= 10;
+        count++;
+    }
+    return count;
+}
+
 int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_window) {
     int running = TRUE;
     int score = 0;
+    struct timespec start_time;
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
     struct timespec tick_time;
     struct timespec curr_time;
     int tps = 60;
@@ -543,6 +556,12 @@ int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_wind
         wrefresh(board_window);
 
         wclear(score_window);
+        clock_gettime(CLOCK_MONOTONIC, &curr_time);
+        wprintw(score_window, "%d:%02d", (curr_time.tv_sec-start_time.tv_sec)/60,
+                (curr_time.tv_sec-start_time.tv_sec)%60);
+        for (int i=0; i<2*WIDTH+1-5-count_digits(score); i++) {
+            wprintw(score_window, " ");
+        }
         wprintw(score_window, "%d", score);
         wrefresh(score_window);
         unplace_tetromino(active_tetromino, game_board);
@@ -623,8 +642,7 @@ int main() {
     curs_set(0);
 
     WINDOW *board_window = newwin(HEIGHT, 2*WIDTH+1, 0, 0);
-
-    WINDOW *score_window = newwin(1, 6, 22,0);
+    WINDOW *score_window = newwin(1, 2*WIDTH+1, 22,0);
 
     loop(game_board, board_window, score_window);
 
