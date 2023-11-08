@@ -309,10 +309,12 @@ int can_place_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
                             || !(tetromino->row+rr < HEIGHT-1)
                             || !(tetromino->col+cc > 0)
                             || !(tetromino->col+cc < WIDTH-1)
-                            || !(game_board[tetromino->row+rr][tetromino->col+cc] == B_SQUARE)
+                            || !(game_board[tetromino->row+rr][tetromino->col+cc] 
+                                == B_SQUARE)
                         ) && (
                             !(tetromino->row+rr == 0)
-                            || !(game_board[tetromino->row+rr][tetromino->col+cc] == W_SQUARE)
+                            || !(game_board[tetromino->row+rr][tetromino->col+cc] 
+                                == W_SQUARE)
                             || !(tetromino->col+cc > 0)
                             || !(tetromino->col+cc < WIDTH-1)
                         )
@@ -333,7 +335,8 @@ int place_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
         for (int cc=0; cc < 4; cc++) {
             if (tetromino->shape[tetromino->orientation][rr][cc] == 1
                     && tetromino->row+rr > 0) {
-                game_board[tetromino->row+rr][tetromino->col+cc] = tetromino->id;
+                game_board[tetromino->row+rr][tetromino->col+cc] 
+                    = tetromino->id;
             }
         }
     }
@@ -344,20 +347,17 @@ int can_unplace_tetromino(Tetromino *tetromino, int game_board[HEIGHT][WIDTH]) {
     for (int rr=0; rr < 4; rr++) {
         for (int cc=0; cc < 4; cc++) {
             if (tetromino->shape[tetromino->orientation][rr][cc] == 1) {
-                if (
-                        (
-                            !(tetromino->row+rr > 0)
-                            || !(tetromino->row+rr < HEIGHT-1)
-                            || !(tetromino->col+cc > 0)
-                            || !(tetromino->col+cc < WIDTH-1)
-                            || !(game_board[tetromino->row+rr][tetromino->col+cc] == tetromino->id)
-                        ) && (
-                            !(tetromino->row+rr == 0)
-                            || !(game_board[tetromino->row+rr][tetromino->col+cc] == W_SQUARE)
-                            || !(tetromino->col+cc > 0)
-                            || !(tetromino->col+cc < WIDTH-1)
-                        )
-                   ) {
+                if ((!(tetromino->row + rr > 0) ||
+                     !(tetromino->row + rr < HEIGHT - 1) ||
+                     !(tetromino->col + cc > 0) ||
+                     !(tetromino->col + cc < WIDTH - 1) ||
+                     !(game_board[tetromino->row + rr][tetromino->col + cc] ==
+                       tetromino->id)) &&
+                    (!(tetromino->row + rr == 0) ||
+                     !(game_board[tetromino->row + rr][tetromino->col + cc] ==
+                       W_SQUARE) ||
+                     !(tetromino->col + cc > 0) ||
+                     !(tetromino->col + cc < WIDTH - 1))) {
                     return FALSE;
                 }
             }
@@ -541,7 +541,12 @@ int count_digits(int num) {
     return count;
 }
 
-int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_window, WINDOW *level_window) {
+int loop(
+        int game_board[HEIGHT][WIDTH],
+        WINDOW *board_window,
+        WINDOW *score_window,
+        WINDOW *level_window
+        ) {
     int running = TRUE;
     int score = 0;
     int lines_cleared;
@@ -582,7 +587,8 @@ int loop(int game_board[HEIGHT][WIDTH], WINDOW *board_window, WINDOW *score_wind
 
         wclear(score_window);
         clock_gettime(CLOCK_MONOTONIC, &curr_time);
-        wprintw(score_window, "%02d:%02d", (curr_time.tv_sec-start_time.tv_sec)/60,
+        wprintw(score_window, "%02d:%02d",
+                (curr_time.tv_sec-start_time.tv_sec)/60,
                 (curr_time.tv_sec-start_time.tv_sec)%60);
         for (int i=0; i<2*WIDTH-5-count_digits(score); i++) {
             wprintw(score_window, " ");
