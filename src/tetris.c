@@ -261,12 +261,12 @@ int clear_filled_lines(int game_board[HEIGHT][WIDTH]) {
     return count;
 }
 
-int compute_score(int lines_cleared) {
+int compute_score(int lines_cleared, int level) {
     switch (lines_cleared) {
-        case 4: return 800;
-        case 3: return 500;
-        case 2: return 300;
-        case 1: return 100;
+        case 4: return 1200*(level+1);
+        case 3: return 300*(level+1);
+        case 2: return 100*(level+1);
+        case 1: return 40*(level+1);
     }
     return 0;
 }
@@ -341,7 +341,7 @@ int loop(
         wclear(board_window);
         lines_cleared = clear_filled_lines(game_board);
         total_lines_cleared += lines_cleared;
-        score += compute_score(lines_cleared);
+        score += compute_score(lines_cleared, level);
         level = total_lines_cleared/10;
         place_tetromino(active_tetromino, game_board);
         display_game(game_board, board_window);
