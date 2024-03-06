@@ -60,7 +60,7 @@ Tetromino *make_tetromino(int id) {
     }
     tetromino->id = id;
     tetromino->orientation = ZERO;
-    tetromino->row = 0;
+    tetromino->row = 1;
     if (id == 1 || id == 2) {
         tetromino->col = 4;
     } else {
@@ -397,6 +397,10 @@ int loop(
                     active_tetromino->row++;
                 }
                 active_tetromino->row--;
+                // don't let any more inputs register after hard drop
+                // and immediately end the current fall period
+                fall_counter = fall_period;
+                break;
             } else if (ch == 'z' || ch == 'Z') {
                 rotate_tetromino(active_tetromino, game_board, CCW);
             } else if (ch == 'x' || ch == 'X') {
