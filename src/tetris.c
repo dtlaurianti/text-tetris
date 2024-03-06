@@ -321,7 +321,7 @@ int loop(
     int score = 0;
     int lines_cleared;
     int total_lines_cleared = 0;
-    int level = 0;
+    int level = 1;
 
     struct timespec start_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
@@ -329,7 +329,7 @@ int loop(
     struct timespec curr_time;
 
     int tps = 60;
-    int fall_period = 1 * tps;
+    int fall_period = tps / level;
     int fall_counter = 0;
     float delay_s = 1.0 / tps;
 
@@ -340,9 +340,12 @@ int loop(
     while (running) {
         wclear(board_window);
         lines_cleared = clear_filled_lines(game_board);
-        total_lines_cleared += lines_cleared;
-        score += compute_score(lines_cleared, level);
-        level = total_lines_cleared/10;
+        if (lines_cleared > 0) {
+            total_lines_cleared += lines_cleared;
+            score += compute_score(lines_cleared, level);
+            level = 1 + total_lines_cleared / 10;
+            fall_period = tps / level;
+        }
         place_tetromino(active_tetromino, game_board);
         display_game(game_board, board_window);
         wrefresh(board_window);
