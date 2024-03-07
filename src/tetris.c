@@ -338,7 +338,7 @@ int loop(
     int ch;
 
     while (running) {
-        wclear(board_window);
+        wmove(board_window, 0, 0);
         lines_cleared = clear_filled_lines(game_board);
         if (lines_cleared > 0) {
             total_lines_cleared += lines_cleared;
@@ -350,7 +350,7 @@ int loop(
         display_game(game_board, board_window);
         wrefresh(board_window);
 
-        wclear(level_window);
+        wmove(level_window, 0, 0);
         wprintw(level_window, "Level:");
         for (int i=0; i<2*WIDTH-6-count_digits(level); i++) {
             wprintw(level_window, " ");
@@ -358,7 +358,7 @@ int loop(
         wprintw(level_window, "%d", level);
         wrefresh(level_window);
 
-        wclear(score_window);
+        wmove(score_window, 0, 0);
         clock_gettime(CLOCK_MONOTONIC, &curr_time);
         wprintw(score_window, "%02d:%02d",
                 (curr_time.tv_sec-start_time.tv_sec)/60,
@@ -434,6 +434,8 @@ int main() {
     clear_board(game_board);
 
     initscr();
+    // make getch non-blocking to reduce text flashing
+    nodelay(stdscr, TRUE);
     if (has_colors() == FALSE) {
         endwin();
         printf("Your terminal does not support colors.\n");
