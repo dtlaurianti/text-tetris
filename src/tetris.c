@@ -324,7 +324,8 @@ int loop(
         WINDOW *board_window,
         WINDOW *score_window,
         WINDOW *level_window,
-        WINDOW *log_window
+        WINDOW *log_window,
+        int *high_score_ptr
         ) {
     int running = TRUE;
     int score = 0;
@@ -438,7 +439,10 @@ int loop(
                 next_tetromino_id = (rand() % 7) + 1;
                 active_tetromino = make_tetromino(next_tetromino_id);
                 if (!can_place_tetromino(active_tetromino, game_board)) {
-                   running = false;
+                    if (score > *high_score_ptr) {
+                        *high_score_ptr = score;
+                    }
+                    running = false;
                 }
             }
             strncpy(log_msg, "\n", sizeof(log_msg)-1);
@@ -455,19 +459,37 @@ int menu_loop(
         WINDOW *log_window
         ) {
     int quit = 0;
+    int high_score = 0;
     while (!quit) {
+
         wclear(score_window);
+        wrefresh(score_window);
         wclear(level_window);
+        wrefresh(level_window);
         wclear(log_window);
-        refresh();
+        wrefresh(log_window);
+
         int game_board[HEIGHT][WIDTH];
         clear_board(game_board);
+
         wmove(board_window, 0, 0);
         display_game(game_board, board_window);
+
         wmove(board_window, HEIGHT/4, WIDTH-3);
         wattron(board_window, COLOR_PAIR(J_SQUARE));
         wprintw(board_window, "TETRIS");
         wattroff(board_window, COLOR_PAIR(J_SQUARE));
+
+        wmove(board_window, HEIGHT/2-1, WIDTH-5);
+        wattron(board_window, COLOR_PAIR(S_SQUARE));
+        wprintw(board_window, "HIGH SCORE");
+        wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+        wmove(board_window, HEIGHT/2, 2*WIDTH-7-count_digits(high_score));
+        wattron(board_window, COLOR_PAIR(S_SQUARE));
+        wprintw(board_window, "%d", high_score);
+        wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
         wmove(board_window, 3*HEIGHT/4, WIDTH-8);
         wattron(board_window, COLOR_PAIR(Z_SQUARE));
         wprintw(board_window, "TAP KEY TO START");
@@ -479,7 +501,7 @@ int menu_loop(
         int ch = wgetch(board_window);
         nodelay(stdscr, TRUE);
 
-        loop(game_board, board_window, score_window, level_window, log_window, high_score);
+        loop(game_board, board_window, score_window, level_window, log_window, &high_score);
     }
     return 0;
 }
