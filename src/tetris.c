@@ -261,12 +261,20 @@ int clear_filled_lines(int game_board[HEIGHT][WIDTH]) {
     return count;
 }
 
-int compute_score(int lines_cleared, int level) {
+int compute_score(int lines_cleared, int level, char log_msg[2*WIDTH]) {
     switch (lines_cleared) {
-        case 4: return 1200*(level+1);
-        case 3: return 300*(level+1);
-        case 2: return 100*(level+1);
-        case 1: return 40*(level+1);
+        case 4: 
+            strncpy(log_msg, "Tetris!!!", 2*WIDTH);
+            return 1200*(level+1);
+        case 3: 
+            strncpy(log_msg, "Triple Clear!!", 2*WIDTH);
+            return 300*(level+1);
+        case 2: 
+            strncpy(log_msg, "Double Clear!", 2*WIDTH);
+            return 100*(level+1);
+        case 1: 
+            strncpy(log_msg, "Line Cleared", 2*WIDTH);
+            return 40*(level+1);
     }
     return 0;
 }
@@ -315,7 +323,8 @@ int loop(
         int game_board[HEIGHT][WIDTH],
         WINDOW *board_window,
         WINDOW *score_window,
-        WINDOW *level_window
+        WINDOW *level_window,
+        WINDOW *log_window
         ) {
     int running = TRUE;
     int score = 0;
@@ -333,6 +342,8 @@ int loop(
     int fall_counter = 0;
     float delay_s = 1.0 / tps;
 
+    char log_msg[2*WIDTH] = "Starting new game...";
+
     int next_tetromino_id = (rand() % 7) + 1;
     Tetromino *active_tetromino = make_tetromino(next_tetromino_id);
     int ch;
@@ -342,7 +353,7 @@ int loop(
         lines_cleared = clear_filled_lines(game_board);
         if (lines_cleared > 0) {
             total_lines_cleared += lines_cleared;
-            score += compute_score(lines_cleared, level);
+            score += compute_score(lines_cleared, level, log_msg);
             level = 1 + total_lines_cleared / 10;
             fall_period = tps / level;
         }
@@ -368,6 +379,11 @@ int loop(
         }
         wprintw(score_window, "%d", score);
         wrefresh(score_window);
+
+        wmove(log_window, 0, 0);
+        wprintw(log_window, "%s", log_msg);
+        wrefresh(log_window);
+
         unplace_tetromino(active_tetromino, game_board);
 
         clock_gettime(CLOCK_MONOTONIC, &tick_time);
@@ -421,17 +437,34 @@ int loop(
                 free(active_tetromino);
                 next_tetromino_id = (rand() % 7) + 1;
                 active_tetromino = make_tetromino(next_tetromino_id);
+                if (!can_place_tetromino(active_tetromino, game_board)) {
+                   running = false;
+                }
             }
+            strncpy(log_msg, "\n", sizeof(log_msg)-1);
         }
     }
     free(active_tetromino);
     return 0;
 }
 
+int menu_loop(
+        WINDOW *board_window,
+        WINDOW *score_window,
+        WINDOW *level_window,
+        WINDOW *log_window
+        ) {
+    int quit = 0;
+    while (!quit) {
+        int game_board[HEIGHT][WIDTH];
+        clear_board(game_board);
+        loop(game_board, board_window, score_window, level_window, log_window);
+    }
+    return 0;
+}
+
 int main() {
     srand(time(NULL));
-    int game_board[HEIGHT][WIDTH];
-    clear_board(game_board);
 
     initscr();
     // make getch non-blocking to reduce text flashing
@@ -459,9 +492,11 @@ int main() {
     WINDOW *level_window = newwin(1, 2*WIDTH+1, window_origin_y-1, window_origin_x);
     WINDOW *board_window = newwin(HEIGHT, 2*WIDTH+1, window_origin_y, window_origin_x);
     WINDOW *score_window = newwin(1, 2*WIDTH+1, window_origin_y+22, window_origin_x);
+    WINDOW *log_window = newwin(1, 2*WIDTH+1, window_origin_y+24, window_origin_x);
+
     wattron(board_window, A_STANDOUT);
 
-    loop(game_board, board_window, score_window, level_window);
+    menu_loop(board_window, score_window, level_window, log_window);
 
     delwin(board_window);
     delwin(score_window);
