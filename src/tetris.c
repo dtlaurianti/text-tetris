@@ -456,9 +456,30 @@ int menu_loop(
         ) {
     int quit = 0;
     while (!quit) {
+        wclear(score_window);
+        wclear(level_window);
+        wclear(log_window);
+        refresh();
         int game_board[HEIGHT][WIDTH];
         clear_board(game_board);
-        loop(game_board, board_window, score_window, level_window, log_window);
+        wmove(board_window, 0, 0);
+        display_game(game_board, board_window);
+        wmove(board_window, HEIGHT/4, WIDTH-3);
+        wattron(board_window, COLOR_PAIR(J_SQUARE));
+        wprintw(board_window, "TETRIS");
+        wattroff(board_window, COLOR_PAIR(J_SQUARE));
+        wmove(board_window, 3*HEIGHT/4, WIDTH-8);
+        wattron(board_window, COLOR_PAIR(Z_SQUARE));
+        wprintw(board_window, "TAP KEY TO START");
+        wattroff(board_window, COLOR_PAIR(Z_SQUARE));
+        wrefresh(board_window);
+
+        // use wgetch to avoid bug where getch clears the screen while waiting
+        nodelay(stdscr, FALSE);
+        int ch = wgetch(board_window);
+        nodelay(stdscr, TRUE);
+
+        loop(game_board, board_window, score_window, level_window, log_window, high_score);
     }
     return 0;
 }
