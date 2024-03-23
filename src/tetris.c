@@ -492,15 +492,36 @@ int prompt_name(
     wattroff(board_window, COLOR_PAIR(J_SQUARE));
     wrefresh(board_window);
 
+    wmove(board_window, 3*HEIGHT/4+1, WIDTH-8);
+    wattron(board_window, COLOR_PAIR(Z_SQUARE));
+    wprintw(board_window, "ENTER TO CONFIRM");
+    wattroff(board_window, COLOR_PAIR(Z_SQUARE));
+    wrefresh(board_window);
     char ch[2] = "";
     char name[MAX_NAME_LEN] = "";
     nodelay(stdscr, FALSE);
-    while ((ch[0] = wgetch(board_window)) != '\n' && strlen(name) < MAX_NAME_LEN - 1) {
-        strncat(name, ch, 1);
-        wmove(board_window, 3*HEIGHT/4, WIDTH-8);
-        wattron(board_window, COLOR_PAIR(Z_SQUARE));
+    while ((ch[0] = wgetch(board_window)) != '\n') {
+        if (ch[0] == ' ' || strlen(name) >= MAX_NAME_LEN - 1) {
+            continue;
+        }
+        if (ch[0] == KEY_BACKSPACE || ch[0] == KEY_DC || ch[0] == 127) {
+            // delete the last character in the string
+            name[strlen(name)-1] = '\0'; 
+            // continue;
+        }
+        else {
+            strncat(name, ch, 1);
+        }
+        wmove(board_window, HEIGHT/2+1, WIDTH-8);
+        for (int col = 2; col < WIDTH-2; col++) {
+            wattron(board_window, COLOR_PAIR(B_SQUARE));
+            wprintw(board_window, "[]");
+            wattroff(board_window, COLOR_PAIR(B_SQUARE));
+        }
+        wmove(board_window, HEIGHT/2+1, WIDTH-8);
+        wattron(board_window, COLOR_PAIR(J_SQUARE));
         wprintw(board_window, name);
-        wattroff(board_window, COLOR_PAIR(Z_SQUARE));
+        wattroff(board_window, COLOR_PAIR(J_SQUARE));
         wrefresh(board_window);
     }
     nodelay(stdscr, TRUE);
