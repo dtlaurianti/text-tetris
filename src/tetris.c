@@ -461,7 +461,8 @@ int prompt_name(
         WINDOW *score_window,
         WINDOW *level_window,
         WINDOW *log_window,
-        int high_score
+        int high_score,
+        char *high_score_name
         ) {
     wclear(score_window);
     wrefresh(score_window);
@@ -497,6 +498,7 @@ int prompt_name(
     wprintw(board_window, "ENTER TO CONFIRM");
     wattroff(board_window, COLOR_PAIR(Z_SQUARE));
     wrefresh(board_window);
+
     char ch[2] = "";
     char name[MAX_NAME_LEN] = "";
     nodelay(stdscr, FALSE);
@@ -527,6 +529,7 @@ int prompt_name(
     nodelay(stdscr, TRUE);
 
     set_high_score(name, high_score);
+    strncpy(high_score_name, name, 16);
 
     return 0;
 }
@@ -539,10 +542,12 @@ int menu_loop(
         ) {
     int quit = 0;
     int high_score = get_high_score();
-    int new_high_score = false;
+    char high_score_name[16];
+    get_high_score_name(high_score_name);
+    int new_high_score = true;
     while (!quit) {
         if (new_high_score) {
-            prompt_name(board_window, score_window, level_window, log_window, high_score);
+            prompt_name(board_window, score_window, level_window, log_window, high_score, high_score_name);
         }
             
 
@@ -569,7 +574,12 @@ int menu_loop(
         wprintw(board_window, "HIGH SCORE");
         wattroff(board_window, COLOR_PAIR(S_SQUARE));
 
-        wmove(board_window, HEIGHT/2, 2*WIDTH-7-count_digits(high_score));
+        wmove(board_window, HEIGHT/2, 2*WIDTH-7-strlen(high_score_name));
+        wattron(board_window, COLOR_PAIR(S_SQUARE));
+        wprintw(board_window, high_score_name);
+        wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+        wmove(board_window, HEIGHT/2+1, 2*WIDTH-7-count_digits(high_score));
         wattron(board_window, COLOR_PAIR(S_SQUARE));
         wprintw(board_window, "%d", high_score);
         wattroff(board_window, COLOR_PAIR(S_SQUARE));
@@ -582,7 +592,8 @@ int menu_loop(
 
         // use wgetch to avoid bug where getch clears the screen while waiting
         nodelay(stdscr, FALSE);
-        while ((wgetch(board_window)) != '\n') {
+        char ch;
+        while ((ch = wgetch(board_window)) != '\n') {
         }
         nodelay(stdscr, TRUE);
 
