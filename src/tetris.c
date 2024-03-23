@@ -553,15 +553,16 @@ int menu_loop(
         wprintw(board_window, "%d", high_score);
         wattroff(board_window, COLOR_PAIR(S_SQUARE));
 
-        wmove(board_window, 3*HEIGHT/4, WIDTH-8);
+        wmove(board_window, 3*HEIGHT/4, WIDTH-9);
         wattron(board_window, COLOR_PAIR(Z_SQUARE));
-        wprintw(board_window, "TAP KEY TO START");
+        wprintw(board_window, "TAP ENTER TO START");
         wattroff(board_window, COLOR_PAIR(Z_SQUARE));
         wrefresh(board_window);
 
         // use wgetch to avoid bug where getch clears the screen while waiting
         nodelay(stdscr, FALSE);
-        int ch = wgetch(board_window);
+        while ((wgetch(board_window)) != '\n') {
+        }
         nodelay(stdscr, TRUE);
 
         loop(game_board, board_window, score_window, level_window, log_window, &high_score, &new_high_score);
