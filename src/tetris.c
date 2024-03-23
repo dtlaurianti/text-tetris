@@ -6,6 +6,7 @@
 #include <time.h>
 #include <ncurses.h>
 #include "constants.h"
+#include "highscore.h"
 
 int init_color_pairs() {
     init_pair(I_SQUARE, 5, 0);
@@ -459,7 +460,7 @@ int menu_loop(
         WINDOW *log_window
         ) {
     int quit = 0;
-    int high_score = 0;
+    int high_score = get_highscore();
     while (!quit) {
 
         wclear(score_window);

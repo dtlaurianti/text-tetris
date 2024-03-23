@@ -9,7 +9,7 @@ IDIR = ../include
 ODIR = obj
 LDIR = ../lib
 # list the dependency file names and convert to their relative path
-SRCS = tetris.c
+SRCS = tetris.c highscore.c
 # DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 # compute the object file names and convert to their relative path
 _OBJS = $(SRCS:.c=.o)
