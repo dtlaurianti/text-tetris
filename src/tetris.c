@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -326,7 +327,8 @@ int loop(
         WINDOW *score_window,
         WINDOW *level_window,
         WINDOW *log_window,
-        int *high_score_ptr
+        int *high_score_ptr,
+        int *new_high_score_ptr
         ) {
     int running = TRUE;
     int score = 0;
@@ -442,7 +444,7 @@ int loop(
                 if (!can_place_tetromino(active_tetromino, game_board)) {
                     if (score > *high_score_ptr) {
                         *high_score_ptr = score;
-                        set_high_score("player", score);
+                        *new_high_score_ptr = true;
                     }
                     running = false;
                 }
@@ -454,6 +456,60 @@ int loop(
     return 0;
 }
 
+int prompt_name(
+        WINDOW *board_window,
+        WINDOW *score_window,
+        WINDOW *level_window,
+        WINDOW *log_window,
+        int high_score
+        ) {
+    wclear(score_window);
+    wrefresh(score_window);
+    wclear(level_window);
+    wrefresh(level_window);
+    wclear(log_window);
+    wrefresh(log_window);
+
+    int game_board[HEIGHT][WIDTH];
+    clear_board(game_board);
+
+    wmove(board_window, 0, 0);
+    display_game(game_board, board_window);
+
+    wmove(board_window, HEIGHT/4, WIDTH-7);
+    wattron(board_window, COLOR_PAIR(S_SQUARE));
+    wprintw(board_window, "NEW HIGH SCORE");
+    wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+    wmove(board_window, HEIGHT/4+1, 2*WIDTH-5-count_digits(high_score));
+    wattron(board_window, COLOR_PAIR(S_SQUARE));
+    wprintw(board_window, "%d", high_score);
+    wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+    wmove(board_window, HEIGHT/2, WIDTH-8);
+    wattron(board_window, COLOR_PAIR(J_SQUARE));
+    wprintw(board_window, "ENTER YOUR NAME:");
+    wattroff(board_window, COLOR_PAIR(J_SQUARE));
+    wrefresh(board_window);
+
+    char ch[2] = "";
+    char name[MAX_NAME_LEN] = "";
+    nodelay(stdscr, FALSE);
+    while ((ch[0] = wgetch(board_window)) != '\n' && strlen(name) < MAX_NAME_LEN - 1) {
+        strncat(name, ch, 1);
+        wmove(board_window, 3*HEIGHT/4, WIDTH-8);
+        wattron(board_window, COLOR_PAIR(Z_SQUARE));
+        wprintw(board_window, name);
+        wattroff(board_window, COLOR_PAIR(Z_SQUARE));
+        wrefresh(board_window);
+    }
+    nodelay(stdscr, TRUE);
+
+    set_high_score(name, high_score);
+
+    return 0;
+}
+
 int menu_loop(
         WINDOW *board_window,
         WINDOW *score_window,
@@ -462,7 +518,12 @@ int menu_loop(
         ) {
     int quit = 0;
     int high_score = get_high_score();
+    int new_high_score = false;
     while (!quit) {
+        if (new_high_score) {
+            prompt_name(board_window, score_window, level_window, log_window, high_score);
+        }
+            
 
         wclear(score_window);
         wrefresh(score_window);
@@ -503,7 +564,7 @@ int menu_loop(
         int ch = wgetch(board_window);
         nodelay(stdscr, TRUE);
 
-        loop(game_board, board_window, score_window, level_window, log_window, &high_score);
+        loop(game_board, board_window, score_window, level_window, log_window, &high_score, &new_high_score);
     }
     return 0;
 }

@@ -21,6 +21,8 @@
 #define B_SQUARE 8
 #define W_SQUARE 9
 
+#define MAX_NAME_LEN 16
+
 const int I_SHAPE[4][4][4] = {
     {
         {0,0,0,0},
