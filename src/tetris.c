@@ -442,6 +442,7 @@ int loop(
                 if (!can_place_tetromino(active_tetromino, game_board)) {
                     if (score > *high_score_ptr) {
                         *high_score_ptr = score;
+                        set_high_score("player", score);
                     }
                     running = false;
                 }
@@ -460,7 +461,7 @@ int menu_loop(
         WINDOW *log_window
         ) {
     int quit = 0;
-    int high_score = get_highscore();
+    int high_score = get_high_score();
     while (!quit) {
 
         wclear(score_window);

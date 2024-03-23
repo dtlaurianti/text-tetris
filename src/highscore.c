@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int get_highscore() {
+int get_high_score() {
     FILE *hs = fopen("hs.csv", "r");
     if (hs != NULL) {
         char buffer[256];
@@ -13,4 +13,14 @@ int get_highscore() {
         return atoi(score);
     }
     return 0;
+}
+
+int set_high_score(char *name, int score) {
+    FILE *hs = fopen("hs.csv", "w");
+    if (hs != NULL) {
+        fprintf(hs, "%s, %d", name, score);
+        fclose(hs);
+        return 0;
+    }
+    return 1;
 }
