@@ -459,6 +459,7 @@ int main() {
     WINDOW *level_window = newwin(1, 2*WIDTH+1, window_origin_y-1, window_origin_x);
     WINDOW *board_window = newwin(HEIGHT, 2*WIDTH+1, window_origin_y, window_origin_x);
     WINDOW *score_window = newwin(1, 2*WIDTH+1, window_origin_y+22, window_origin_x);
+    wattron(board_window, A_STANDOUT);
 
     loop(game_board, board_window, score_window, level_window);
 
