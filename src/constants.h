@@ -1,5 +1,4 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#pragma once
 
 #define WIDTH 12
 #define HEIGHT 22
@@ -233,5 +232,3 @@ const int X_KICK[8][4][2] = {
     {{-1,0}, {-1,-1}, {0,2}, {-1,2}},
     {{1,0}, {1,1}, {0,-2}, {1,-2}}
 };
-
-#endif // CONSTANTS_H
