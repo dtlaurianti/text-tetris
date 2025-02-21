@@ -494,9 +494,9 @@ int prompt_name(
     wrefresh(board_window);
 
     wmove(board_window, 3*HEIGHT/4+1, WIDTH-8);
-    wattron(board_window, COLOR_PAIR(Z_SQUARE));
+    wattron(board_window, COLOR_PAIR(L_SQUARE));
     wprintw(board_window, "ENTER TO CONFIRM");
-    wattroff(board_window, COLOR_PAIR(Z_SQUARE));
+    wattroff(board_window, COLOR_PAIR(L_SQUARE));
     wrefresh(board_window);
 
     char ch[2] = "";
@@ -544,7 +544,7 @@ int menu_loop(
     int high_score = get_high_score();
     char high_score_name[16];
     get_high_score_name(high_score_name);
-    int new_high_score = true;
+    int new_high_score = false;
     while (!quit) {
         if (new_high_score) {
             prompt_name(board_window, score_window, level_window, log_window, high_score, high_score_name);
@@ -585,9 +585,9 @@ int menu_loop(
         wattroff(board_window, COLOR_PAIR(S_SQUARE));
 
         wmove(board_window, 3*HEIGHT/4, WIDTH-9);
-        wattron(board_window, COLOR_PAIR(Z_SQUARE));
+        wattron(board_window, COLOR_PAIR(T_SQUARE));
         wprintw(board_window, "TAP ENTER TO START");
-        wattroff(board_window, COLOR_PAIR(Z_SQUARE));
+        wattroff(board_window, COLOR_PAIR(T_SQUARE));
         wrefresh(board_window);
 
         // use wgetch to avoid bug where getch clears the screen while waiting
