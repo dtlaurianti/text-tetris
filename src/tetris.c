@@ -541,9 +541,10 @@ int menu_loop(
         WINDOW *log_window
         ) {
     int quit = 0;
-    int high_score = get_high_score();
+    int high_score;
+    get_high_score(&high_score);
     char high_score_name[16];
-    get_high_score_name(high_score_name);
+    get_high_score_name(high_score_name, sizeof(high_score_name));
     int new_high_score = false;
     while (!quit) {
         if (new_high_score) {
@@ -634,6 +635,8 @@ int main() {
     WINDOW *log_window = newwin(1, 2*WIDTH+1, window_origin_y+24, window_origin_x);
 
     wattron(board_window, A_STANDOUT);
+    
+    create_scores_table();
 
     menu_loop(board_window, score_window, level_window, log_window);
 

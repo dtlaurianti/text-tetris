@@ -1,39 +1,110 @@
+#include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sqlite3.h>
 
-int get_high_score() {
-    FILE *hs = fopen("hs.csv", "r");
-    if (hs != NULL) {
-        char buffer[256];
-        fgets(buffer, sizeof(buffer), hs);
-        char *name = strtok(buffer, ",");
-        char *score = strtok(NULL, "\n");
-        fclose(hs);
-        return atoi(score);
+#define TEXT_TETRIS_DB "text-tetris.db"
+
+int create_scores_table() {
+    sqlite3 *db;
+    int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s cannot open database: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
     }
+    char *query = "CREATE TABLE IF NOT EXISTS Scores(Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Score INT);";
+    char *err_msg = NULL;
+    rc = sqlite3_exec(db, query, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s failed to fetch data: %s\n", __func__, err_msg);
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+        return 1;
+    }
+    sqlite3_close(db);
     return 0;
 }
 
-int get_high_score_name(char *name) {
-    FILE *hs = fopen("hs.csv", "r");
-    if (hs != NULL) {
-        char buffer[256];
-        fgets(buffer, sizeof(buffer), hs);
-        strncpy(name, strtok(buffer, ","), 16);
-        fclose(hs);
-        return 0;
+int get_high_score(int *const high_score_ptr) {
+    sqlite3 *db;
+    int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s cannot open database: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
     }
-    strncpy(name, "", 16);
-    return 1;
+    char *query = "SELECT MAX(Score) FROM Scores;";
+    sqlite3_stmt *res = NULL;
+    rc = sqlite3_prepare_v2(db, query, -1, &res, 0);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s failed to fetch data: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    rc = sqlite3_step(res);
+    if (rc == SQLITE_ROW) {
+        *high_score_ptr = sqlite3_column_int(res, 0);
+    }
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+    return 0;
 }
 
-int set_high_score(char *name, int score) {
-    FILE *hs = fopen("hs.csv", "w");
-    if (hs != NULL) {
-        fprintf(hs, "%s, %d", name, score);
-        fclose(hs);
-        return 0;
+int get_high_score_name(char *const name, const size_t size) {
+    sqlite3 *db;
+    int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s cannot open database: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
     }
-    return 1;
+    char *query = "SELECT Name FROM Scores WHERE Score = (SELECT MAX(Score) FROM Scores);";
+    sqlite3_stmt *res = NULL;
+    rc = sqlite3_prepare_v2(db, query, -1, &res, 0);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s failed to fetch data: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    rc = sqlite3_step(res);
+    if (rc == SQLITE_ROW) {
+        const char *text = (char *)sqlite3_column_text(res, 0);
+        if (strlen(text) >= size) {
+            sqlite3_finalize(res);
+            sqlite3_close(db);
+            return 1;
+        }
+        strncpy(name, text, strlen(text));
+        name[strlen(text)] = '\0';
+    }
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+    return 0;
+}
+
+int set_high_score(const char *const name, const int score) {
+    sqlite3 *db;
+    int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s cannot open database: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    char * query_format = "INSERT INTO Scores(Name, Score) VALUES('%s', %d);";
+    size_t score_digits = floor(log10(abs(score)));
+    char query[strlen(query_format) + strlen(name) + score_digits];
+    snprintf(query, sizeof(query), query_format, name, score);
+    char *err_msg = NULL;
+    rc = sqlite3_exec(db, query, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s failed to fetch data: %s\n", __func__, err_msg);
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+        return 1;
+    }
+    sqlite3_close(db);
+    return 0;
 }
