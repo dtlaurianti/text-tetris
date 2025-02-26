@@ -28,7 +28,7 @@ int create_scores_table() {
     return 0;
 }
 
-int get_high_score(int *const high_score_ptr) {
+int get_high_score(int *const high_score_ptr, char *const name, const size_t size) {
     sqlite3 *db;
     int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
     if (rc != SQLITE_OK) {
@@ -36,9 +36,9 @@ int get_high_score(int *const high_score_ptr) {
         sqlite3_close(db);
         return 1;
     }
-    char *query = "SELECT MAX(Score) FROM Scores;";
+    char *score_query = "SELECT MAX(Score) FROM Scores;";
     sqlite3_stmt *res = NULL;
-    rc = sqlite3_prepare_v2(db, query, -1, &res, 0);
+    rc = sqlite3_prepare_v2(db, score_query, -1, &res, 0);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "%s failed to fetch data: %s\n", __func__, sqlite3_errmsg(db));
         sqlite3_close(db);
@@ -49,21 +49,8 @@ int get_high_score(int *const high_score_ptr) {
         *high_score_ptr = sqlite3_column_int(res, 0);
     }
     sqlite3_finalize(res);
-    sqlite3_close(db);
-    return 0;
-}
-
-int get_high_score_name(char *const name, const size_t size) {
-    sqlite3 *db;
-    int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "%s cannot open database: %s\n", __func__, sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return 1;
-    }
-    char *query = "SELECT Name FROM Scores WHERE Score = (SELECT MAX(Score) FROM Scores);";
-    sqlite3_stmt *res = NULL;
-    rc = sqlite3_prepare_v2(db, query, -1, &res, 0);
+    char *name_query = "SELECT Name FROM Scores WHERE Score = (SELECT MAX(Score) FROM Scores);";
+    rc = sqlite3_prepare_v2(db, name_query, -1, &res, 0);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "%s failed to fetch data: %s\n", __func__, sqlite3_errmsg(db));
         sqlite3_close(db);
