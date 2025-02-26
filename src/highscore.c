@@ -36,21 +36,9 @@ int get_high_score(int *const high_score_ptr, char *const name, const size_t siz
         sqlite3_close(db);
         return 1;
     }
-    char *score_query = "SELECT MAX(Score) FROM Scores;";
+    char *query = "SELECT Name, Score FROM Scores WHERE Score = (SELECT MAX(Score) FROM Scores);";
     sqlite3_stmt *res = NULL;
-    rc = sqlite3_prepare_v2(db, score_query, -1, &res, 0);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "%s failed to fetch data: %s\n", __func__, sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return 1;
-    }
-    rc = sqlite3_step(res);
-    if (rc == SQLITE_ROW) {
-        *high_score_ptr = sqlite3_column_int(res, 0);
-    }
-    sqlite3_finalize(res);
-    char *name_query = "SELECT Name FROM Scores WHERE Score = (SELECT MAX(Score) FROM Scores);";
-    rc = sqlite3_prepare_v2(db, name_query, -1, &res, 0);
+    rc = sqlite3_prepare_v2(db, query, -1, &res, 0);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "%s failed to fetch data: %s\n", __func__, sqlite3_errmsg(db));
         sqlite3_close(db);
@@ -66,6 +54,7 @@ int get_high_score(int *const high_score_ptr, char *const name, const size_t siz
         }
         strncpy(name, text, strlen(text));
         name[strlen(text)] = '\0';
+        *high_score_ptr = sqlite3_column_int(res, 1);
     }
     sqlite3_finalize(res);
     sqlite3_close(db);
