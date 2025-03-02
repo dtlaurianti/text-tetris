@@ -445,6 +445,8 @@ int loop(
                     if (score > *high_score_ptr) {
                         *high_score_ptr = score;
                         *new_high_score_ptr = true;
+                    } else {
+                        new_high_score_ptr = false;
                     }
                     running = false;
                 }
@@ -534,6 +536,90 @@ int prompt_name(
     return 0;
 }
 
+int print_main_menu(WINDOW *board_window) {
+    int high_score;
+    char high_score_name[16];
+    get_high_score(&high_score, high_score_name, sizeof(high_score_name));
+    int game_board[HEIGHT][WIDTH];
+    clear_board(game_board);
+
+    wmove(board_window, 0, 0);
+    display_game(game_board, board_window);
+
+    wmove(board_window, HEIGHT/4, WIDTH-3);
+    wattron(board_window, COLOR_PAIR(J_SQUARE));
+    wprintw(board_window, "TETRIS");
+    wattroff(board_window, COLOR_PAIR(J_SQUARE));
+
+    wmove(board_window, HEIGHT/2-1, WIDTH-5);
+    wattron(board_window, COLOR_PAIR(S_SQUARE));
+    wprintw(board_window, "HIGH SCORE");
+    wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+    wmove(board_window, HEIGHT/2, 4);
+    wattron(board_window, COLOR_PAIR(I_SQUARE));
+    wprintw(board_window, high_score_name);
+
+    wmove(board_window, HEIGHT/2+1, 2*WIDTH-4-count_digits(high_score));
+    wprintw(board_window, "%d", high_score);
+    wattroff(board_window, COLOR_PAIR(I_SQUARE));
+
+    wmove(board_window, 3*HEIGHT/4, WIDTH-9);
+    wattron(board_window, COLOR_PAIR(T_SQUARE));
+    wprintw(board_window, "START: ENTER");
+    wattroff(board_window, COLOR_PAIR(T_SQUARE));
+
+    wmove(board_window, 3*HEIGHT/4+2, WIDTH-9);
+    wattron(board_window, COLOR_PAIR(L_SQUARE));
+    wprintw(board_window, "HIGHSCORES: H");
+    wattroff(board_window, COLOR_PAIR(L_SQUARE));
+    wrefresh(board_window);
+    return 0;
+}
+
+int print_high_score_menu(WINDOW *board_window) {
+    int high_scores[NUM_HIGH_SCORES_DISPLAY];
+    char **high_score_names;
+    high_score_names = malloc(MAX_NAME_LEN * sizeof(char *));
+    for (size_t i = 0; i < NUM_HIGH_SCORES_DISPLAY; i++) {
+        high_score_names[i] = malloc(MAX_NAME_LEN);
+    }
+    get_high_scores(high_scores, high_score_names,  NUM_HIGH_SCORES_DISPLAY, MAX_NAME_LEN);
+    int game_board[HEIGHT][WIDTH];
+    clear_board(game_board);
+
+    wmove(board_window, 0, 0);
+    display_game(game_board, board_window);
+
+    wmove(board_window, 2, WIDTH-3);
+    wattron(board_window, COLOR_PAIR(J_SQUARE));
+    wprintw(board_window, "TETRIS");
+    wattroff(board_window, COLOR_PAIR(J_SQUARE));
+
+    wmove(board_window, 3, WIDTH-5);
+    wattron(board_window, COLOR_PAIR(S_SQUARE));
+    wprintw(board_window, "HIGH SCORES");
+    wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+    for (size_t i = 0; i < NUM_HIGH_SCORES_DISPLAY; i++) {
+        wmove(board_window, 4+2*i, 4);
+        wattron(board_window, COLOR_PAIR(I_SQUARE));
+        wprintw(board_window, high_score_names[i]);
+
+        wmove(board_window, 5+2*i, 2*WIDTH-4-count_digits(high_scores[i]));
+        wprintw(board_window, "%d", high_scores[i]);
+        wattroff(board_window, COLOR_PAIR(I_SQUARE));
+    }
+
+    wmove(board_window, 3*HEIGHT/4, WIDTH-9);
+    wattron(board_window, COLOR_PAIR(T_SQUARE));
+    wprintw(board_window, "MAIN MENU: M");
+    wattroff(board_window, COLOR_PAIR(T_SQUARE));
+
+    wrefresh(board_window);
+    return 0;
+}
+
 int menu_loop(
         WINDOW *board_window,
         WINDOW *score_window,
@@ -542,9 +628,8 @@ int menu_loop(
         ) {
     int quit = 0;
     int high_score;
-    get_high_score(&high_score);
     char high_score_name[16];
-    get_high_score_name(high_score_name, sizeof(high_score_name));
+    get_high_score(&high_score, high_score_name, sizeof(high_score_name));
     int new_high_score = false;
     while (!quit) {
         if (new_high_score) {
@@ -559,45 +644,23 @@ int menu_loop(
         wclear(log_window);
         wrefresh(log_window);
 
-        int game_board[HEIGHT][WIDTH];
-        clear_board(game_board);
-
-        wmove(board_window, 0, 0);
-        display_game(game_board, board_window);
-
-        wmove(board_window, HEIGHT/4, WIDTH-3);
-        wattron(board_window, COLOR_PAIR(J_SQUARE));
-        wprintw(board_window, "TETRIS");
-        wattroff(board_window, COLOR_PAIR(J_SQUARE));
-
-        wmove(board_window, HEIGHT/2-1, WIDTH-5);
-        wattron(board_window, COLOR_PAIR(S_SQUARE));
-        wprintw(board_window, "HIGH SCORE");
-        wattroff(board_window, COLOR_PAIR(S_SQUARE));
-
-        wmove(board_window, HEIGHT/2, 2*WIDTH-7-strlen(high_score_name));
-        wattron(board_window, COLOR_PAIR(S_SQUARE));
-        wprintw(board_window, high_score_name);
-        wattroff(board_window, COLOR_PAIR(S_SQUARE));
-
-        wmove(board_window, HEIGHT/2+1, 2*WIDTH-7-count_digits(high_score));
-        wattron(board_window, COLOR_PAIR(S_SQUARE));
-        wprintw(board_window, "%d", high_score);
-        wattroff(board_window, COLOR_PAIR(S_SQUARE));
-
-        wmove(board_window, 3*HEIGHT/4, WIDTH-9);
-        wattron(board_window, COLOR_PAIR(T_SQUARE));
-        wprintw(board_window, "TAP ENTER TO START");
-        wattroff(board_window, COLOR_PAIR(T_SQUARE));
-        wrefresh(board_window);
+        print_main_menu(board_window);
 
         // use wgetch to avoid bug where getch clears the screen while waiting
         nodelay(stdscr, FALSE);
-        char ch;
+        int ch;
         while ((ch = wgetch(board_window)) != '\n') {
+            if (ch == 'h') {
+                print_high_score_menu(board_window);
+            }
+            if (ch == 'm') {
+                print_main_menu(board_window);
+            }
         }
         nodelay(stdscr, TRUE);
 
+        int game_board[HEIGHT][WIDTH];
+        clear_board(game_board);
         loop(game_board, board_window, score_window, level_window, log_window, &high_score, &new_high_score);
     }
     return 0;
