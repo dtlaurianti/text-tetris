@@ -321,6 +321,81 @@ int count_digits(int num) {
     return count;
 }
 
+int prompt_name(
+        WINDOW *board_window,
+        WINDOW *score_window,
+        WINDOW *level_window,
+        WINDOW *log_window,
+        int score
+        ) {
+    wclear(score_window);
+    wrefresh(score_window);
+    wclear(level_window);
+    wrefresh(level_window);
+    wclear(log_window);
+    wrefresh(log_window);
+
+    int game_board[HEIGHT][WIDTH];
+    clear_board(game_board);
+
+    wmove(board_window, 0, 0);
+    display_game(game_board, board_window);
+
+    wmove(board_window, HEIGHT/4, WIDTH-5);
+    wattron(board_window, COLOR_PAIR(S_SQUARE));
+    wprintw(board_window, "NEW SCORE!");
+    wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+    wmove(board_window, HEIGHT/4+1, 2*WIDTH-5-count_digits(score));
+    wattron(board_window, COLOR_PAIR(S_SQUARE));
+    wprintw(board_window, "%d", score);
+    wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+    wmove(board_window, HEIGHT/2, WIDTH-8);
+    wattron(board_window, COLOR_PAIR(J_SQUARE));
+    wprintw(board_window, "ENTER YOUR NAME:");
+    wattroff(board_window, COLOR_PAIR(J_SQUARE));
+    wrefresh(board_window);
+
+    wmove(board_window, 3*HEIGHT/4+1, WIDTH-8);
+    wattron(board_window, COLOR_PAIR(L_SQUARE));
+    wprintw(board_window, "ENTER TO CONFIRM");
+    wattroff(board_window, COLOR_PAIR(L_SQUARE));
+    wrefresh(board_window);
+
+    char ch[2] = "";
+    char name[MAX_NAME_LEN] = "";
+    nodelay(stdscr, FALSE);
+    while ((ch[0] = wgetch(board_window)) != '\n') {
+        if (ch[0] == ' ' || strlen(name) >= MAX_NAME_LEN - 1) {
+            continue;
+        }
+        if (ch[0] == KEY_BACKSPACE || ch[0] == KEY_DC || ch[0] == 127) {
+            // delete the last character in the string
+            name[strlen(name)-1] = '\0'; 
+            // continue;
+        }
+        else {
+            strncat(name, ch, 1);
+        }
+        wmove(board_window, HEIGHT/2+1, WIDTH-8);
+        for (int col = 2; col < WIDTH-2; col++) {
+            wattron(board_window, COLOR_PAIR(B_SQUARE));
+            wprintw(board_window, "[]");
+            wattroff(board_window, COLOR_PAIR(B_SQUARE));
+        }
+        wmove(board_window, HEIGHT/2+1, WIDTH-8);
+        wattron(board_window, COLOR_PAIR(J_SQUARE));
+        wprintw(board_window, name);
+        wattroff(board_window, COLOR_PAIR(J_SQUARE));
+        wrefresh(board_window);
+    }
+    nodelay(stdscr, TRUE);
+
+    add_score(name, score);
+    return 0;
+}
+
 int loop(
         int game_board[HEIGHT][WIDTH],
         WINDOW *board_window,
@@ -446,12 +521,7 @@ int loop(
                 next_tetromino_id = (rand() % 7) + 1;
                 active_tetromino = make_tetromino(next_tetromino_id);
                 if (!can_place_tetromino(active_tetromino, game_board)) {
-                    if (score > *high_score_ptr) {
-                        *high_score_ptr = score;
-                        *new_high_score_ptr = true;
-                    } else {
-                        new_high_score_ptr = false;
-                    }
+                    prompt_name(board_window, score_window, level_window, log_window, score);
                     running = false;
                 }
             }
@@ -459,84 +529,6 @@ int loop(
         }
     }
     free(active_tetromino);
-    return 0;
-}
-
-int prompt_name(
-        WINDOW *board_window,
-        WINDOW *score_window,
-        WINDOW *level_window,
-        WINDOW *log_window,
-        int high_score,
-        char *high_score_name
-        ) {
-    wclear(score_window);
-    wrefresh(score_window);
-    wclear(level_window);
-    wrefresh(level_window);
-    wclear(log_window);
-    wrefresh(log_window);
-
-    int game_board[HEIGHT][WIDTH];
-    clear_board(game_board);
-
-    wmove(board_window, 0, 0);
-    display_game(game_board, board_window);
-
-    wmove(board_window, HEIGHT/4, WIDTH-7);
-    wattron(board_window, COLOR_PAIR(S_SQUARE));
-    wprintw(board_window, "NEW HIGH SCORE");
-    wattroff(board_window, COLOR_PAIR(S_SQUARE));
-
-    wmove(board_window, HEIGHT/4+1, 2*WIDTH-5-count_digits(high_score));
-    wattron(board_window, COLOR_PAIR(S_SQUARE));
-    wprintw(board_window, "%d", high_score);
-    wattroff(board_window, COLOR_PAIR(S_SQUARE));
-
-    wmove(board_window, HEIGHT/2, WIDTH-8);
-    wattron(board_window, COLOR_PAIR(J_SQUARE));
-    wprintw(board_window, "ENTER YOUR NAME:");
-    wattroff(board_window, COLOR_PAIR(J_SQUARE));
-    wrefresh(board_window);
-
-    wmove(board_window, 3*HEIGHT/4+1, WIDTH-8);
-    wattron(board_window, COLOR_PAIR(L_SQUARE));
-    wprintw(board_window, "ENTER TO CONFIRM");
-    wattroff(board_window, COLOR_PAIR(L_SQUARE));
-    wrefresh(board_window);
-
-    char ch[2] = "";
-    char name[MAX_NAME_LEN] = "";
-    nodelay(stdscr, FALSE);
-    while ((ch[0] = wgetch(board_window)) != '\n') {
-        if (ch[0] == ' ' || strlen(name) >= MAX_NAME_LEN - 1) {
-            continue;
-        }
-        if (ch[0] == KEY_BACKSPACE || ch[0] == KEY_DC || ch[0] == 127) {
-            // delete the last character in the string
-            name[strlen(name)-1] = '\0'; 
-            // continue;
-        }
-        else {
-            strncat(name, ch, 1);
-        }
-        wmove(board_window, HEIGHT/2+1, WIDTH-8);
-        for (int col = 2; col < WIDTH-2; col++) {
-            wattron(board_window, COLOR_PAIR(B_SQUARE));
-            wprintw(board_window, "[]");
-            wattroff(board_window, COLOR_PAIR(B_SQUARE));
-        }
-        wmove(board_window, HEIGHT/2+1, WIDTH-8);
-        wattron(board_window, COLOR_PAIR(J_SQUARE));
-        wprintw(board_window, name);
-        wattroff(board_window, COLOR_PAIR(J_SQUARE));
-        wrefresh(board_window);
-    }
-    nodelay(stdscr, TRUE);
-
-    set_high_score(name, high_score);
-    strncpy(high_score_name, name, 16);
-
     return 0;
 }
 
@@ -636,11 +628,6 @@ int menu_loop(
     get_high_score(&high_score, high_score_name, sizeof(high_score_name));
     int new_high_score = false;
     while (!quit) {
-        if (new_high_score) {
-            prompt_name(board_window, score_window, level_window, log_window, high_score, high_score_name);
-        }
-            
-
         wclear(score_window);
         wrefresh(score_window);
         wclear(level_window);

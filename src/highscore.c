@@ -115,7 +115,7 @@ int get_high_scores(int *const high_scores,
     return 0;
 }
 
-int set_high_score(const char *const name, const int score) {
+int add_score(const char *const name, const int score) {
     sqlite3 *db;
     int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
     if (rc != SQLITE_OK) {
