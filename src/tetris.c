@@ -413,13 +413,17 @@ int loop(
                 if (!can_place_tetromino(active_tetromino,
                             game_board)) {
                     active_tetromino->row--;
+                } else {
+                    score++;
                 }
             } else if (ch == ' ') {
                 while (can_place_tetromino(active_tetromino,
                             game_board)) {
                     active_tetromino->row++;
+                    score += 2;
                 }
                 active_tetromino->row--;
+                score -= 2;
                 // don't let any more inputs register after hard drop
                 // and immediately end the current fall period
                 fall_counter = fall_period;
