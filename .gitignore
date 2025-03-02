@@ -58,3 +58,4 @@ dkms.conf
 
 # Game Generated files
 hs.csv
+*.db
