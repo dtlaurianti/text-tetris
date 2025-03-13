@@ -115,6 +115,53 @@ int get_high_scores(int *const high_scores,
     return 0;
 }
 
+int get_high_scorers(int *const high_scores, 
+        char *const *names,
+        const size_t count, const size_t name_length) {
+    for (int i = 0; i < count; i++) {
+        strncpy(names[i], "_", 2);
+        high_scores[i] = 0;
+    }
+
+    sqlite3 *db;
+    int rc = sqlite3_open(TEXT_TETRIS_DB, &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s cannot open database: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    char *query_format = "SELECT Name, max(Score) FROM Scores GROUP BY Name ORDER BY Score DESC LIMIT %d;";
+    size_t count_digits = floor(log10(count));
+    char query[strlen(query_format) + count_digits];
+    snprintf(query, sizeof(query), query_format, count);
+    sqlite3_stmt *res = NULL;
+    rc = sqlite3_prepare_v2(db, query, -1, &res, 0);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "%s failed to fetch data: %s\n", __func__, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    for (int i = 0; i < count; i++) {
+        rc = sqlite3_step(res);
+        if (rc == SQLITE_ROW) {
+            const char *text = (char *)sqlite3_column_text(res, 0);
+            if (strlen(text) >= name_length) {
+                sqlite3_finalize(res);
+                sqlite3_close(db);
+                return 1;
+            }
+            strncpy(names[i], text, strlen(text));
+            names[i][strlen(text)] = '\0';
+            high_scores[i] = sqlite3_column_int(res, 1);
+        } else if (rc == SQLITE_DONE) {
+            break;
+        }
+    }
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+    return 0;
+}
+
 int add_score(const char *const name, const int score) {
     sqlite3 *db;
     int rc = sqlite3_open(TEXT_TETRIS_DB, &db);

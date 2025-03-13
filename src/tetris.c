@@ -612,6 +612,60 @@ int print_high_score_menu(WINDOW *board_window) {
     wprintw(board_window, "MAIN MENU: M");
     wattroff(board_window, COLOR_PAIR(T_SQUARE));
 
+    wmove(board_window, 3*HEIGHT/4+2, WIDTH-9);
+    wattron(board_window, COLOR_PAIR(J_SQUARE));
+    wprintw(board_window, "HIGH SCORERS: U");
+    wattroff(board_window, COLOR_PAIR(J_SQUARE));
+
+    wrefresh(board_window);
+    return 0;
+}
+
+int print_high_scorers_menu(WINDOW *board_window) {
+    int high_scores[NUM_HIGH_SCORES_DISPLAY];
+    char **high_score_names;
+    high_score_names = malloc(MAX_NAME_LEN * sizeof(char *));
+    for (size_t i = 0; i < NUM_HIGH_SCORES_DISPLAY; i++) {
+        high_score_names[i] = malloc(MAX_NAME_LEN);
+    }
+    get_high_scorers(high_scores, high_score_names,  NUM_HIGH_SCORES_DISPLAY, MAX_NAME_LEN);
+    int game_board[HEIGHT][WIDTH];
+    clear_board(game_board);
+
+    wmove(board_window, 0, 0);
+    display_game(game_board, board_window);
+
+    wmove(board_window, 2, WIDTH-3);
+    wattron(board_window, COLOR_PAIR(J_SQUARE));
+    wprintw(board_window, "TETRIS");
+    wattroff(board_window, COLOR_PAIR(J_SQUARE));
+
+    wmove(board_window, 3, WIDTH-5);
+    wattron(board_window, COLOR_PAIR(S_SQUARE));
+    wprintw(board_window, "HIGH SCORES");
+    wattroff(board_window, COLOR_PAIR(S_SQUARE));
+
+    for (size_t i = 0; i < NUM_HIGH_SCORES_DISPLAY; i++) {
+        wmove(board_window, 4+2*i, 4);
+        wattron(board_window, COLOR_PAIR(I_SQUARE));
+        wprintw(board_window, high_score_names[i]);
+
+        wmove(board_window, 5+2*i, 2*WIDTH-4-count_digits(high_scores[i]));
+        wprintw(board_window, "%d", high_scores[i]);
+        wattroff(board_window, COLOR_PAIR(I_SQUARE));
+    }
+
+    wmove(board_window, 3*HEIGHT/4, WIDTH-9);
+    wattron(board_window, COLOR_PAIR(T_SQUARE));
+    wprintw(board_window, "MAIN MENU: M");
+    wattroff(board_window, COLOR_PAIR(T_SQUARE));
+
+    wmove(board_window, 3*HEIGHT/4+2, WIDTH-9);
+    wattron(board_window, COLOR_PAIR(L_SQUARE));
+    wprintw(board_window, "HIGHSCORES: H");
+    wattroff(board_window, COLOR_PAIR(L_SQUARE));
+    wrefresh(board_window);
+
     wrefresh(board_window);
     return 0;
 }
@@ -646,6 +700,9 @@ int menu_loop(
             }
             if (ch == 'm') {
                 print_main_menu(board_window);
+            }
+            if (ch == 'u') {
+                print_high_scorers_menu(board_window);
             }
         }
         nodelay(stdscr, TRUE);
