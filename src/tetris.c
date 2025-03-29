@@ -263,18 +263,34 @@ int clear_filled_lines(int game_board[HEIGHT][WIDTH]) {
     return count;
 }
 
-int compute_score(int lines_cleared, int level, char log_msg[2*WIDTH]) {
+int compute_score(int lines_cleared, int perfect, int level, char log_msg[2*WIDTH]) {
     switch (lines_cleared) {
         case 4: 
+            if (perfect) {
+                strncpy(log_msg, "Perfect Tetris!!!", 2*WIDTH);
+                return 2000*(level+1);
+            }
             strncpy(log_msg, "Tetris!!!", 2*WIDTH);
             return 1200*(level+1);
         case 3: 
+            if (perfect) {
+                strncpy(log_msg, "Perfect Triple Clear!!", 2*WIDTH);
+                return 1800*(level+1);
+            }
             strncpy(log_msg, "Triple Clear!!", 2*WIDTH);
             return 300*(level+1);
         case 2: 
+            if (perfect) {
+                strncpy(log_msg, "Perfect Double Clear!", 2*WIDTH);
+                return 1200*(level+1);
+            }
             strncpy(log_msg, "Double Clear!", 2*WIDTH);
             return 100*(level+1);
         case 1: 
+            if (perfect) {
+                strncpy(log_msg, "Perfect Clear!", 2*WIDTH);
+                return 800*(level+1);
+            }
             strncpy(log_msg, "Line Cleared", 2*WIDTH);
             return 40*(level+1);
     }
@@ -432,7 +448,17 @@ int loop(
         lines_cleared = clear_filled_lines(game_board);
         if (lines_cleared > 0) {
             total_lines_cleared += lines_cleared;
-            score += compute_score(lines_cleared, level, log_msg);
+            int perfect = 1;
+            for (int row = 0; row < HEIGHT; row++) {
+                for (int col = 0; col < WIDTH; col++) {
+                    if (row != 0 && row != HEIGHT - 1 && col != 0 &&
+                            col != WIDTH - 1 &&
+                            game_board[row][col] != W_SQUARE) {
+                        perfect = 0;
+                    }
+                }
+            }
+            score += compute_score(lines_cleared, perfect, level, log_msg);
             level = 1 + total_lines_cleared / 10;
             fall_period = tps / level;
         }
